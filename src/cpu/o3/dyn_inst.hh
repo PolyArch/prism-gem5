@@ -240,16 +240,19 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     uint64_t readIntRegOperand(const StaticInst *si, int idx)
     {
+        this->cpu->getCPG()->regfile_access(this->seqNum, false);
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
     FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
+      this->cpu->getCPG()->regfile_faccess(this->seqNum, false);
         return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
     {
+        this->cpu->getCPG()->regfile_faccess(this->seqNum, false);
         return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
 
@@ -258,12 +261,14 @@ class BaseO3DynInst : public BaseDynInst<Impl>
      */
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
+        this->cpu->getCPG()->regfile_access(this->seqNum, true);
         this->cpu->setIntReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
     }
 
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
+        this->cpu->getCPG()->regfile_faccess(this->seqNum, true);
         this->cpu->setFloatReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperand(si, idx, val);
     }
@@ -271,6 +276,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void setFloatRegOperandBits(const StaticInst *si, int idx,
                                 FloatRegBits val)
     {
+        this->cpu->getCPG()->regfile_faccess(this->seqNum, true);
         this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }

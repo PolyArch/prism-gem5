@@ -66,6 +66,8 @@
 #include "sim/system.hh"
 #include "sim/tlb.hh"
 
+#include "cpu/crtpath/crtpath.hh"
+
 /**
  * @file
  * Defines a dynamic instruction context.
@@ -547,6 +549,8 @@ class BaseDynInst : public RefCounted
     bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
     bool isMicroBranch() const { return staticInst->isMicroBranch(); }
 
+    bool isSimStart() const { return staticInst->isSimStart(); }
+    bool isSimStop() const { return staticInst->isSimStop(); }
     /** Temporarily sets this instruction as a serialize before instruction. */
     void setSerializeBefore() { status.set(SerializeBefore); }
 
@@ -697,7 +701,10 @@ class BaseDynInst : public RefCounted
     void clearCanIssue() { status.reset(CanIssue); }
 
     /** Sets this instruction as issued from the IQ. */
-    void setIssued() { status.set(Issued); }
+    void setIssued() {
+      status.set(Issued);
+      cpu->getCPG()->execute(seqNum);
+    }
 
     /** Returns whether or not this instruction has issued. */
     bool isIssued() const { return status[Issued]; }
@@ -725,13 +732,61 @@ class BaseDynInst : public RefCounted
     bool isAtCommit() { return status[AtCommit]; }
 
     /** Sets this instruction as committed. */
-    void setCommitted() { status.set(Committed); }
+    void setCommitted() {
+      status.set(Committed);
+      status.set(Committed);
+      if (!isSquashed()) {
+
+        for (unsigned i = 0; i < staticInst->numSrcRegs(); ++i) {
+          if (staticInst->srcRegIdx(i) < TheISA::Ctrl_Base_DepTag
+              && _srcRegIdx[i] != TheISA::ZeroReg)
+            cpu->getCPG()->consumer(_srcRegIdx[i], seqNum);
+        }
+        for (unsigned i = 0; i < staticInst->numDestRegs(); ++i) {
+          if (staticInst->destRegIdx(i) < TheISA::Ctrl_Base_DepTag
+              && _destRegIdx[i] != TheISA::ZeroReg)
+            cpu->getCPG()->producer(_destRegIdx[i], seqNum);
+        }
+        if (this->isLoad() || this->isStore()) {
+          cpu->getCPG()->eff_addr(seqNum,
+                                  this->effAddr,
+                                  this->effAddr + this->effSize-1);
+        }
+
+        cpu->getCPG()->setInstTy(seqNum,
+                                 this->pc.instAddr(),
+                                 this->pc.microPC(),
+                                 this->opClass(),
+                                 this->isLoad(),
+                                 this->isStore(),
+                                 this->isControl(),
+                                 this->isCall(),
+                                 this->isReturn(),
+                                 false, //this->isKernelStart(),
+                                 false, // this->isKernelStop(),
+                                 this->isSerializeBefore(),
+                                 this->isSerializeAfter(),
+                                 this->isNonSpeculative(),
+                                 this->isStoreConditional(),
+                                 this->isDataPrefetch(),
+                                 this->isInteger(),
+                                 this->isFloating(),
+                                 this->isSquashAfter(),
+                                 this->isWriteBarrier(),
+                                 this->isMemBarrier(),
+                                 this->isSyscall());
+      }
+      cpu->getCPG()->committed(seqNum);
+    }
 
     /** Returns whether or not this instruction is committed. */
     bool isCommitted() const { return status[Committed]; }
 
     /** Sets this instruction as squashed. */
-    void setSquashed() { status.set(Squashed); }
+    void setSquashed() {
+      status.set(Squashed);
+      cpu->getCPG()->squash(seqNum);
+    }
 
     /** Returns whether or not this instruction is squashed. */
     bool isSquashed() const { return status[Squashed]; }
@@ -739,7 +794,10 @@ class BaseDynInst : public RefCounted
     //Instruction Queue Entry
     //-----------------------
     /** Sets this instruction as a entry the IQ. */
-    void setInIQ() { status.set(IqEntry); }
+    void setInIQ() {
+      status.set(IqEntry);
+      cpu->getCPG()->dispatch(seqNum);
+    }
 
     /** Sets this instruction as a entry the IQ. */
     void clearInIQ() { status.reset(IqEntry); }

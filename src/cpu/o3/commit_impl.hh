@@ -1279,6 +1279,12 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     if (head_inst->isStore())
         committedStores[tid] = true;
 
+    if (head_inst->isSimStop()) {
+      if (getenv("IGNORE_SIM_STOP") == NULL) {
+        exitSimLoop("SimStop Instruction executed");
+      }
+    }
+
     // Return true to indicate that we have committed an instruction.
     return true;
 }

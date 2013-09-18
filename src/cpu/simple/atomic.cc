@@ -46,6 +46,7 @@
 #include "base/bigint.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
+#include "cpu/crtpath/crtpath.hh"
 #include "cpu/simple/atomic.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Drain.hh"
@@ -55,9 +56,11 @@
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "params/AtomicSimpleCPU.hh"
+#include "sim/eventq.hh"
 #include "sim/faults.hh"
-#include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "sim/sim_events.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -530,6 +533,25 @@ AtomicSimpleCPU::tick()
 
             if (curStaticInst) {
                 fault = curStaticInst->execute(this, traceData);
+                getCPG()->trackCallstack(pcState.instAddr(),
+                                         pcState.microPC(),
+                                         curStaticInst->isControl(),
+                                         curStaticInst->isCall(),
+                                         curStaticInst->isReturn());
+                if (curStaticInst->isSimStart()) {
+                  if (getenv("IGNORE_SIM_START") == NULL) {
+                    Event *event = new SimLoopExitEvent("SimStart Instruction executed", 0, 0);
+                    mainEventQueue.schedule(event, curTick());
+                  }
+                }
+
+                if (curStaticInst->isSimStop()) {
+                  if (getenv("IGNORE_SIM_STOP") == NULL) {
+                    Event *event = new SimLoopExitEvent("SimStop Instruction executed", 0, 0);
+                    mainEventQueue.schedule(event, curTick());
+                  }
+                }
+
 
                 // keep an instruction count
                 if (fault == NoFault)

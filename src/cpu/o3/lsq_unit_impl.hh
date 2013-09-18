@@ -95,6 +95,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     DPRINTF(IEW, "Writeback event [sn:%lli].\n", inst->seqNum);
     DPRINTF(Activity, "Activity: Writeback event [sn:%lli].\n", inst->seqNum);
 
+    cpu->getCPG()->doneWB(inst->seqNum);
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
     // If this is a split access, wait until all packets are received.
@@ -827,6 +828,8 @@ LSQUnit<Impl>::writebackStores()
                 storeWBIdx, inst->pcState(),
                 req->getPaddr(), (int)*(inst->memData),
                 inst->seqNum);
+
+        cpu->getCPG()->startWB(inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
         if (inst->isStoreConditional()) {

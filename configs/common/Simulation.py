@@ -69,6 +69,21 @@ def setCPUClass(options):
     """
 
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
+    if options.cpu_type == "detailed":
+        inst_width = options.inst_width
+        TmpClass.fetchWidth    = inst_width
+        TmpClass.decodeWidth   = inst_width
+        TmpClass.issueWidth    = inst_width
+        TmpClass.renameWidth   = inst_width
+        TmpClass.dispatchWidth = inst_width
+        TmpClass.wbWidth       = inst_width
+        TmpClass.commitWidth   = inst_width
+        TmpClass.squashWidth   = inst_width
+
+        TmpClass.wbDepth       = 16
+        TmpClass.LSQDepCheckShift = 0
+        TmpClass.needsTSO      = False;
+
     CPUClass = None
     if TmpClass.require_caches() and \
             not options.caches and not options.ruby:

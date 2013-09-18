@@ -82,6 +82,7 @@ namespace X86ISA
         0, 0,                           // No immediate or displacement.
         8, 8, 8,                        // All sizes are 8.
         0,                              // Displacement size is 0.
+        0,                              // DyInstTy = 0
         SixtyFourBitMode                // Behave as if we're in 64 bit
                                         // mode (this doesn't actually matter).
     };

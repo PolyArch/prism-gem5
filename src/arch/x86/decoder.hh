@@ -171,6 +171,7 @@ class Decoder
         SIBState,
         DisplacementState,
         ImmediateState,
+        DyInstState,
         //We should never get to this state. Getting here is an error.
         ErrorState
     };
@@ -186,6 +187,7 @@ class Decoder
     State doSIBState(uint8_t);
     State doDisplacementState();
     State doImmediateState();
+    State doDyInstState();
 
   protected:
     /// Caching for decoded instruction objects.

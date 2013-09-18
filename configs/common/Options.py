@@ -197,6 +197,8 @@ def addCommonOptions(parser):
     parser.add_option("--at-instruction", action="store_true", default=False,
         help="""Treat value of --checkpoint-restore or --take-checkpoint as a
                 number of instructions.""")
+    parser.add_option("--inst-width", default="4", help="instruction width")
+    parser.add_option("--num-l1d-mshrs", default="4", help="number of L1D MSHRs")
 
 def addSEOptions(parser):
     # Benchmark options

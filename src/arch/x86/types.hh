@@ -165,6 +165,8 @@ namespace X86ISA
         //The size of the displacement
         uint8_t dispSize;
 
+        uint8_t dyser_inst_ty;
+
         //Mode information
         OperatingMode mode;
     };
@@ -177,12 +179,13 @@ namespace X86ISA
                            "prefixA = %#x,\n\t\tprefixB = %#x\n\t},\n\t"
                      "modRM = %#x,\n\tsib = %#x,\n\t"
                      "immediate = %#x,\n\tdisplacement = %#x\n\t"
-                     "dispSize = %d}\n",
+                     "dispSize = %d, dyser = %d}\n",
                      (uint8_t)emi.legacy, (uint8_t)emi.rex,
                      emi.opcode.num, (uint8_t)emi.opcode.op,
                      emi.opcode.prefixA, emi.opcode.prefixB,
                      (uint8_t)emi.modRM, (uint8_t)emi.sib,
-                     emi.immediate, emi.displacement, emi.dispSize);
+                     emi.immediate, emi.displacement, emi.dispSize,
+                     emi.dyser_inst_ty);
         return os;
     }
 
@@ -218,6 +221,8 @@ namespace X86ISA
         if(emi1.stackSize != emi2.stackSize)
             return false;
         if(emi1.dispSize != emi2.dispSize)
+            return false;
+        if (emi1.dispSize != emi2.dispSize)
             return false;
         return true;
     }
@@ -295,7 +300,7 @@ __hash_namespace_begin
                     emi.immediate ^ emi.displacement ^
                     emi.mode ^
                     emi.opSize ^ emi.addrSize ^
-                    emi.stackSize ^ emi.dispSize;
+                    emi.stackSize ^ emi.dispSize ^ emi.dyser_inst_ty;
         };
     };
 __hash_namespace_end

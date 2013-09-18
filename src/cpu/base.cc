@@ -121,7 +121,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _taskId(ContextSwitchTaskId::Unknown), _pid(Request::invldPid),
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
       interrupts(p->interrupts), profileEvent(NULL),
-      numThreads(p->numThreads), system(p->system)
+      numThreads(p->numThreads), system(p->system),
+      _cpg(0)
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -242,6 +243,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
               "of threads (%i).\n", params()->isa.size(), numThreads);
     }
+    _cpg = new CP_Graph(this);
 }
 
 void
@@ -386,6 +388,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     _pid = oldCPU->getPid();
     _taskId = oldCPU->taskId();
     _switchedOut = false;
+
+    oldCPU->getCPG()->dumpCallstack();
 
     ThreadID size = threadContexts.size();
     for (ThreadID i = 0; i < size; ++i) {

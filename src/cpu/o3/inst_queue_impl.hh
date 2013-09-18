@@ -932,6 +932,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 {
     int dependents = 0;
 
+    cpu->getCPG()->complete(completed_inst->seqNum);
+
     // The instruction queue here takes care of both floating and int ops
     if (completed_inst->isFloating()) {
         fpInstQueueWakeupQccesses++;
@@ -1015,6 +1017,7 @@ InstructionQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
     OpClass op_class = ready_inst->opClass();
 
     readyInsts[op_class].push(ready_inst);
+    cpu->getCPG()->ready(ready_inst->seqNum);
 
     // Will need to reorder the list if either a queue is not on the list,
     // or it has an older instruction than last time.
@@ -1332,6 +1335,7 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
                 inst->pcState(), op_class, inst->seqNum);
 
         readyInsts[op_class].push(inst);
+        cpu->getCPG()->ready(inst->seqNum);
 
         // Will need to reorder the list if either a queue is not on the list,
         // or it has an older instruction than last time.

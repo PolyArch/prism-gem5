@@ -159,6 +159,8 @@ class StaticInst : public RefCounted
         IsMicroBranch,  ///< This microop branches within the microcode for a macroop
         IsDspOp,
         IsSquashAfter, ///< Squash all uncommitted state after executed
+        IsSimStart,
+        IsSimStop,
         NumFlags
     };
 
@@ -252,6 +254,9 @@ class StaticInst : public RefCounted
     //This flag doesn't do anything yet
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}
+
+  bool isSimStart() const { return flags[IsSimStart]; }
+  bool isSimStop() const { return flags[IsSimStop]; }
 
     void setLastMicroop() { flags[IsLastMicroop] = true; }
     void setDelayedCommit() { flags[IsDelayedCommit] = true; }

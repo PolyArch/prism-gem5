@@ -67,6 +67,8 @@ def bitfield OPCODE_OP opcode.op;
 def bitfield OPCODE_OP_TOP5 opcode.op.top5;
 def bitfield OPCODE_OP_BOTTOM3 opcode.op.bottom3;
 
+def bitfield OPCODE_DYSER_INST dyser_inst_ty;
+
 // Immediate fields
 def bitfield IMMEDIATE immediate;
 def bitfield DISPLACEMENT displacement;

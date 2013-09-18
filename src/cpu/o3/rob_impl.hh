@@ -211,6 +211,7 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
 {
     assert(inst);
 
+    cpu->getCPG()->rob_access(inst->seqNum, true);
     robWrites++;
 
     DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
@@ -284,6 +285,7 @@ ROB<Impl>::isHeadReady(ThreadID tid)
 {
     robReads++;
     if (threadEntries[tid] != 0) {
+        cpu->getCPG()->rob_access(instList[tid].front()->seqNum, false);
         return instList[tid].front()->readyToCommit();
     }
 

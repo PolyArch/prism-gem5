@@ -74,6 +74,7 @@ using namespace std;
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
+      icache_latency(0), icache_access_cycle(0),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -979,9 +980,18 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
                               tid);
+            cpu->getCPG()->ctrl_dep(fromCommit->
+                                    commitInfo[tid].mispredictInst->seqNum);
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
+            if (fromCommit->commitInfo[tid].mispredictInst) {
+              cpu->getCPG()->spec_dep(fromCommit->
+                                      commitInfo[tid].mispredictInst->seqNum);
+            } else if (fromCommit->commitInfo[tid].squashInst) {
+              cpu->getCPG()->spec_dep(fromCommit->
+                                      commitInfo[tid].squashInst->seqNum);
+            }
         }
 
         return true;
@@ -1107,6 +1117,7 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     // Keep track of if we can take an interrupt at this boundary
     delayedCommit[tid] = instruction->isDelayedCommit();
 
+    cpu->getCPG()->fetch(seq);
     return instruction;
 }
 
@@ -1163,6 +1174,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     "instruction, starting at PC %s.\n", tid, thisPC);
 
             fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+
+            icache_access_cycle = cpu->curCycle();
 
             if (fetchStatus[tid] == IcacheWaitResponse)
                 ++icacheStallCycles;
@@ -1297,6 +1310,14 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DynInstPtr instruction =
                 buildInst(tid, staticInst, curMacroop,
                           thisPC, nextPC, true);
+            if (icache_access_cycle !=0 ) {
+              //icache_latency= icache_access_cycle - instruction->seqNum;
+              icache_latency= cpu->curCycle() - icache_access_cycle;
+              DPRINTF(Fetch, "----- setting icache latency %lld\n, sn:%i", icache_latency, instruction->seqNum);
+              cpu->getCPG()->icache_latency(instruction->seqNum, icache_latency);
+              icache_access_cycle = 0;
+            }
+
 
             numInst++;
 
@@ -1581,6 +1602,7 @@ DefaultFetch<Impl>::pipelineIcacheAccesses(ThreadID tid)
                 "starting at PC %s.\n", tid, thisPC);
 
         fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+        icache_access_cycle = cpu->curCycle();
     }
 }
 

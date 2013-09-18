@@ -64,6 +64,8 @@
 #include "sim/insttracer.hh"
 #include "sim/system.hh"
 
+#include "cpu/crtpath/crtpath.hh"
+
 struct BaseCPUParams;
 class CheckerCPU;
 class ThreadContext;
@@ -479,6 +481,11 @@ class BaseCPU : public MemObject
     Stats::Scalar numCycles;
     Stats::Scalar numWorkItemsStarted;
     Stats::Scalar numWorkItemsCompleted;
+
+protected:
+  CP_GraphPtr _cpg;
+public:
+  CP_GraphPtr getCPG() const  { return _cpg; }
 };
 
 #endif // THE_ISA == NULL_ISA

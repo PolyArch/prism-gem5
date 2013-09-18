@@ -83,6 +83,8 @@ def config_cache(options, system):
             dcache = dcache_class(size=options.l1d_size,
                                   assoc=options.l1d_assoc)
 
+            dcache.mshrs = options.num_l1d_mshrs
+
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
             if buildEnv['TARGET_ISA'] == 'x86':

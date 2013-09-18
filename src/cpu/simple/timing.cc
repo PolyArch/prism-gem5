@@ -56,6 +56,7 @@
 #include "params/TimingSimpleCPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
+#include "sim/sim_events.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -680,6 +681,21 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
     } else if (curStaticInst) {
         // non-memory instruction: execute completely now
         Fault fault = curStaticInst->execute(this, traceData);
+
+        if (fault == NoFault) {
+          if (curStaticInst->isSimStop()) {
+            if (getenv("IGNORE_SIM_STOP") == NULL) {
+              Event *event = new SimLoopExitEvent("SimStop Instruction executed", 0, 0);
+              mainEventQueue.schedule(event, curTick());
+            }
+          }
+          if (curStaticInst->isSimStart()) {
+            if (getenv("TIMING_SIM_START") != NULL) {
+              Event *event = new SimLoopExitEvent("SimStart Instruction executed", 0, 0);
+              mainEventQueue.schedule(event, curTick());
+            }
+          }
+        }
 
         // keep an instruction count
         if (fault == NoFault)

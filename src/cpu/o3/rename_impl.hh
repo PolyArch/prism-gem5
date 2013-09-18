@@ -541,6 +541,10 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
                 "renamed due to ROB/IQ/LSQ limits.\n",
                 tid, insts_available, min_free_entries);
 
+        DPRINTF(Rename, "[tid:%u]: Will have to block this cycle."
+                "%i insts available, but only %i insts can be "
+                "renamed due to ROB/IQ/LSQ limits.\n",
+                tid, insts_available, min_free_entries);
         insts_available = min_free_entries;
 
         blockThisCycle = true;

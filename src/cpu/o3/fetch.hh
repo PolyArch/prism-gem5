@@ -379,6 +379,9 @@ class DefaultFetch
     /** Pointer to the O3CPU. */
     O3CPU *cpu;
 
+  uint64_t icache_latency;
+  uint64_t icache_access_cycle;
+
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
 

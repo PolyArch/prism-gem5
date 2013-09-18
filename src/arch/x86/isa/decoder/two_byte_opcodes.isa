@@ -348,6 +348,11 @@
                         0x1: MOV(Rd,Dd);
                         0x2: MOV(Cd,Rd);
                         0x3: MOV(Dd,Rd);
+                        0x7: decode OPCODE_DYSER_INST {
+                             0x0B: NopInst::DStart(IsNonSpeculative, IsSimStart);
+                             0x2C: NopInst::DStop(IsNonSpeculative, IsSimStop);
+                             default: UD2();
+                             }
                         default: UD2();
                     }
                     default: UD2();

@@ -109,6 +109,9 @@ Decoder::process()
           case ImmediateState:
             state = doImmediateState();
             break;
+          case DyInstState:
+            state = doDyInstState();
+            break;
           case ErrorState:
             panic("Went to the error state in the decoder.\n");
           default:
@@ -330,7 +333,10 @@ Decoder::doModRMState(uint8_t nextByte)
     } else if(displacementSize) {
         nextState = DisplacementState;
     } else if(immediateSize) {
-        nextState = ImmediateState;
+        if (emi.opcode.prefixA == 0x0f && emi.opcode.op == 0x27)
+            nextState = DyInstState;
+        else
+            nextState = ImmediateState;
     } else {
         instDone = true;
         nextState = ResetState;
@@ -356,7 +362,10 @@ Decoder::doSIBState(uint8_t nextByte)
     if (displacementSize) {
         nextState = DisplacementState;
     } else if(immediateSize) {
-        nextState = ImmediateState;
+        if (emi.opcode.prefixA == 0x0f && emi.opcode.op == 0x27)
+            nextState = DyInstState;
+        else
+            nextState = ImmediateState;
     } else {
         instDone = true;
         nextState = ResetState;
@@ -399,7 +408,10 @@ Decoder::doDisplacementState()
         DPRINTF(Decoder, "Collected displacement %#x.\n",
                 emi.displacement);
         if(immediateSize) {
-            nextState = ImmediateState;
+            if (emi.opcode.prefixA == 0x0f && emi.opcode.op == 0x27)
+                nextState = DyInstState;
+            else
+                nextState = ImmediateState;
         } else {
             instDone = true;
             nextState = ResetState;
@@ -456,6 +468,74 @@ Decoder::doImmediateState()
     else
         nextState = ImmediateState;
     return nextState;
+}
+
+Decoder::State
+Decoder::doDyInstState()
+{
+  State nextState = ErrorState;
+
+  if (emi.opcode.prefixA == 0x0f && emi.opcode.op == 0x27 ) {
+    assert(immediateCollected == 0);
+
+    unsigned immediateSize = 1 + (getenv("LARGE_DYSER_SIMULATION") != 0);
+    emi.dyser_inst_ty = 0;
+    uint64_t immVal = 0;
+    getImmediate(immediateCollected, immVal, immediateSize);
+    emi.dyser_inst_ty = immVal;
+    DPRINTF(Decoder, "DyInst State collecting %d byte, got %d bytes.\n",
+            immediateSize, immediateCollected);
+
+    if (immediateCollected != immediateSize)
+      return DyInstState;
+
+    //reset immediateCollected
+    immediateCollected = 0;
+
+    DPRINTF(Decoder, "DyInst::DInst %#x.\n", emi.dyser_inst_ty);
+
+    switch (emi.dyser_inst_ty) {
+    case 0: //dinit
+    case 1: //dcommit
+      instDone = true;
+      nextState = ResetState;
+      break;
+    case 2: // dsize
+      nextState = ImmediateState;
+      break;
+    case 3: //dprtconf
+      instDone = true;
+      nextState = ResetState;
+      break;
+    case 4: //dmovss
+      nextState = ImmediateState;
+      break;
+    case 11: //dstart
+    case 44: //dstop
+      instDone = true;
+      nextState = ResetState;
+      break;
+    case 25: //KernelStart -- for CP analysis
+    case 26: //KernelStart -- for CP analysis
+      instDone = true;
+      nextState = ResetState;
+      break;
+    case 18: //daddpd
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+    case 23:
+    case 24:
+      instDone = true;
+      nextState = ResetState;
+      break;
+    default:
+      nextState = ImmediateState;
+      break;
+    }
+  }
+  return nextState;
 }
 
 Decoder::InstBytes Decoder::dummy;
