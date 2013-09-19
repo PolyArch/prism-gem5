@@ -220,6 +220,7 @@ void CP_Graph::consumer(unsigned reg, uint64_t seq)
 
 void CP_Graph::setInstTy(uint64_t seq,
      uint64_t pc, uint16_t micropc, OpClass opclass,
+     uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
      bool ld, bool st, bool ctrl, bool call, bool ret,
      bool kernelStart, bool kernelStop,
      bool serialBefore, bool serialAfter, bool nonSpec, bool storeCond,
@@ -230,7 +231,9 @@ void CP_Graph::setInstTy(uint64_t seq,
     return;
 
   CP_NodePtr node = getNode(seq);
-
+  node->numSrcRegs = numSrcRegs;
+  node->numFPDestRegs = numFPDestRegs;
+  node->numIntDestRegs = numIntDestRegs;
   node->isload = ld;
   node->isstore = st;
   node->ctrl = ctrl;

@@ -480,6 +480,8 @@ class DefaultRename
     Stats::Scalar renameFullRegistersEvents;
     /** Stat for total number of renamed destination registers. */
     Stats::Scalar renameRenamedOperands;
+    Stats::Scalar intRenameOperands;
+    Stats::Scalar fpRenameOperands;
     /** Stat for total number of source register rename lookups. */
     Stats::Scalar renameRenameLookups;
     Stats::Scalar intRenameLookups;

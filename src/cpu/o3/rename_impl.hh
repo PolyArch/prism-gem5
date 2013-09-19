@@ -167,6 +167,16 @@ DefaultRename<Impl>::regStats()
         .name(name() + ".fp_rename_lookups")
         .desc("Number of floating rename lookups")
         .prereq(fpRenameLookups);
+    intRenameOperands
+        .name(name() + ".int_rename_operands")
+        .desc("Number of int destination operands rename has renamed")
+        .prereq(intRenameOperands);
+    fpRenameOperands
+        .name(name() + ".fp_rename_operands")
+        .desc("Number of fp destination operands rename has renamed")
+        .prereq(fpRenameOperands);
+
+
 }
 
 template <class Impl>
@@ -1067,6 +1077,8 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
                             rename_result.second);
 
         ++renameRenamedOperands;
+        inst->isFloating() ? fpRenameOperands++ : intRenameOperands++;
+
     }
 }
 

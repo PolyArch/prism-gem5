@@ -24,6 +24,7 @@ public:
                       _memBar(false), _syscall(false),
 
                       _kernel_start(false), _kernel_stop(false),
+                      _numSrcRegs(0), _numFPDestRegs(0), _numIntDestRegs(0),
                       _regfile_read(0), _regfile_write(0),
                       _regfile_fread(0), _regfile_fwrite(0),
                       _rob_read(0), _rob_write(0),
@@ -47,6 +48,7 @@ public:
                    uint16_t opclass,
                    uint64_t eff_addr, uint8_t acc_size,
                    bool kernelStart, bool kernelStop,
+                   uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
                    uint8_t regfile_read, uint8_t regfile_write,
                    uint8_t regfile_fread, uint8_t regfile_fwrite,
                    uint8_t rob_read, uint8_t rob_write,
@@ -72,6 +74,8 @@ public:
     _squashAfter(squashAfter), _writeBar(writeBar),
     _memBar(memBar), _syscall(syscall),
     _kernel_start(kernelStart), _kernel_stop(kernelStop),
+    _numSrcRegs(numSrcRegs), _numFPDestRegs(numFPDestRegs), 
+    _numIntDestRegs(numIntDestRegs),
     _regfile_read(regfile_read), _regfile_write(regfile_write),
     _regfile_fread(regfile_fread), _regfile_fwrite(regfile_fwrite),
     _rob_read(rob_read), _rob_write(rob_write),
@@ -122,7 +126,7 @@ public:
   bool _kernel_start:1;
   bool _kernel_stop:1;
 
-
+  uint8_t _numSrcRegs, _numFPDestRegs, _numIntDestRegs;
   uint8_t _regfile_read, _regfile_write;
   uint8_t _regfile_fread, _regfile_fwrite;
   uint8_t _rob_read, _rob_write;

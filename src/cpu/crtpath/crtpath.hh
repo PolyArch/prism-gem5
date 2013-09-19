@@ -69,11 +69,14 @@ public:
   bool kernelStop;
   uint64_t eff_addr, eff_addr2;
 
+  uint8_t numSrcRegs,numFPDestRegs,numIntDestRegs;
+
   uint8_t regfile_read, regfile_write;
   uint8_t regfile_fread, regfile_fwrite;
   uint8_t rob_read, rob_write;
   uint8_t iw_read, iw_write;
   uint8_t rename_read, rename_write;
+
 
   bool wrote_to_disk;
 
@@ -216,6 +219,7 @@ public:
                          pc, micropc, opclass,
                          eff_addr,eff_addr2-eff_addr+1,
                          kernelStart, kernelStop,
+                         numSrcRegs,numFPDestRegs,numIntDestRegs,
                          regfile_read, regfile_write,
                          regfile_fread, regfile_fwrite,
                          rob_read, rob_write,
@@ -291,6 +295,7 @@ public:
   void consumer(unsigned reg, uint64_t seq);
   void setInstTy(uint64_t seq,
      uint64_t pc, uint16_t micropc, OpClass opclass,
+     uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
      bool ld, bool st, bool ctrl, bool call, bool ret,
      bool kernelStart, bool kernelStop,
      bool serialBefore, bool serialAfter, bool nonSpec, bool storeCond,
