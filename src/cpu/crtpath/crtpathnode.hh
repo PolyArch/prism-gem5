@@ -74,7 +74,7 @@ public:
     _squashAfter(squashAfter), _writeBar(writeBar),
     _memBar(memBar), _syscall(syscall),
     _kernel_start(kernelStart), _kernel_stop(kernelStop),
-    _numSrcRegs(numSrcRegs), _numFPDestRegs(numFPDestRegs), 
+    _numSrcRegs(numSrcRegs), _numFPDestRegs(numFPDestRegs),
     _numIntDestRegs(numIntDestRegs),
     _regfile_read(regfile_read), _regfile_write(regfile_write),
     _regfile_fread(regfile_fread), _regfile_fwrite(regfile_fwrite),
