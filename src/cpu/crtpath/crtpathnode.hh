@@ -2,9 +2,8 @@
 #ifndef __CRITPATH_NODE_HH
 #define __CRITPATH_NODE_HH
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
-
 
 struct CP_NodeDiskImage {
 public:
