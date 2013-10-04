@@ -91,6 +91,52 @@ class CPUProgressEvent : public Event
     virtual const char *description() const;
 };
 
+class InstProfiler {
+public:
+  InstProfiler(): enable_profile(0),
+                  profile_outfile(0)
+  {
+    init();
+  }
+
+  void init();
+  void clear() {
+    exec_prof.clear();
+    branch_to_prof.clear();
+    branch_from_prof.clear();
+
+    is_a_branch_target = false;
+
+    last_branch_addr.first = 0;
+    last_branch_addr.second = 0;
+  }
+
+  void profileAddr(Addr pc, MicroPC upc, StaticInstPtr curStaticInst);
+  void printProfile();
+
+  typedef std::pair<Addr, MicroPC> PC_UPC_t;
+  typedef std::map<PC_UPC_t, uint64_t>  PcProfile_t;
+  typedef std::map<PC_UPC_t, PcProfile_t> CtrlProfile_t;
+  typedef std::map<PC_UPC_t, std::string> AsmMap_t;
+
+private:
+  bool enable_profile;
+  const char *profile_outfile;
+
+
+  // Data structures to keep track of the profiles.
+  bool is_a_branch_target;
+
+  PC_UPC_t last_branch_addr;
+  PC_UPC_t min_addr;
+
+  PcProfile_t exec_prof;
+  CtrlProfile_t branch_to_prof;
+  CtrlProfile_t branch_from_prof;
+  AsmMap_t disasm;
+
+};
+
 class BaseCPU : public MemObject
 {
   protected:
@@ -443,12 +489,17 @@ class BaseCPU : public MemObject
     void enableFunctionTrace();
     void traceFunctionsInternal(Addr pc);
 
+
   private:
     static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
+
+  protected:
+  InstProfiler _profiler;
 
   public:
     void traceFunctions(Addr pc)
     {
+
         if (functionTracingEnabled)
             traceFunctionsInternal(pc);
     }

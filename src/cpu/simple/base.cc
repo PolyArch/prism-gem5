@@ -478,7 +478,7 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isLoad()){
         numLoadInsts++;
     }
-    
+
     if (curStaticInst->isStore()){
         numStoreInsts++;
     }
@@ -486,6 +486,8 @@ BaseSimpleCPU::postExecute()
 
     if (FullSystem)
         traceFunctions(instAddr);
+
+    _profiler.profileAddr(instAddr, pc.microPC(), curStaticInst);
 
     if (traceData) {
         traceData->dump();
