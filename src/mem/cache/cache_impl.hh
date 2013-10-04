@@ -409,7 +409,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
-    DPRINTF(Cache, "%s -- mshrQueue %d, writeBuffer %d \n", __func__, 
+    DPRINTF(Cache, "%s -- mshrQueue %d, writeBuffer %d \n", __func__,
             mshrQueue.allocated, writeBuffer.allocated);
 
 
@@ -556,7 +556,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 // mshrQueue.moveToFront(mshr);
             }
         } else {
-        DPRINTF(Cache, "%s -- (need mshr) mshrQueue %d, writeBuffer %d\n", __func__, 
+        DPRINTF(Cache, "%s -- (need mshr) mshrQueue %d, writeBuffer %d\n", __func__,
             mshrQueue.allocated, writeBuffer.allocated);
 
             // no MSHR
@@ -590,7 +590,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 allocateMissBuffer(pkt, time, true);
             }
 
-        DPRINTF(Cache, "%s -- (got mshr) mshrQueue %d, writeBuffer %d\n", __func__, 
+        DPRINTF(Cache, "%s -- (got mshr) mshrQueue %d, writeBuffer %d\n", __func__,
             mshrQueue.allocated, writeBuffer.allocated);
 
 
@@ -1044,12 +1044,12 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                           pkt->busLastWordDelay);
     } else {
 
-    DPRINTF(Cache, "%s -- (deallocate) mshrQueue %d, writeBuffer %d \n", __func__, 
+    DPRINTF(Cache, "%s -- (deallocate) mshrQueue %d, writeBuffer %d \n", __func__,
 mshrQueue.allocated, writeBuffer.allocated);
 
         mq->deallocate(mshr);
 
-    DPRINTF(Cache, "%s -- (deallocated) mshrQueue %d, writeBuffer %d \n", __func__, 
+    DPRINTF(Cache, "%s -- (deallocated) mshrQueue %d, writeBuffer %d \n", __func__,
 mshrQueue.allocated, writeBuffer.allocated);
 
         if (wasFull && !mq->isFull()) {
