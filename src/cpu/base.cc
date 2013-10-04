@@ -44,11 +44,13 @@
  */
 
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 
 #include "arch/tlb.hh"
 #include "base/loader/symtab.hh"
+#include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -614,3 +616,169 @@ BaseCPU::traceFunctionsInternal(Addr pc)
         functionEntryTick = curTick();
     }
 }
+
+void
+InstProfiler::init()
+{
+  profile_outfile = getenv("PROFILE_GEM5");
+  enable_profile = (profile_outfile != 0);
+
+  clear();
+
+  min_addr.first = (Addr)-1;
+  min_addr.second = (MicroPC) -1;
+
+  if (enable_profile)
+    registerExitCallback(new MakeCallback<InstProfiler,
+                         &InstProfiler::printProfile>(this, true));
+}
+
+void
+InstProfiler::profileAddr(Addr pc, MicroPC upc, StaticInstPtr curStaticInst)
+{
+  if (!enable_profile)
+    return;
+
+  // increment number of time pc executed.
+  PC_UPC_t pc_upc = make_pair(pc, upc);
+  exec_prof[pc_upc] ++;
+  if (is_a_branch_target) {
+    assert(last_branch_addr.first != 0);
+    ++ branch_to_prof[last_branch_addr][pc_upc];
+    ++ branch_from_prof[pc_upc][last_branch_addr];
+    last_branch_addr.first = 0;
+    last_branch_addr.second = 0;
+    is_a_branch_target = false;
+  }
+  bool isControl = curStaticInst->isControl();
+  bool isCall = curStaticInst->isCall();
+  bool isReturn = curStaticInst->isReturn();
+
+  if (isControl && !(isCall || isReturn)) {
+    is_a_branch_target = true;
+    last_branch_addr = pc_upc;
+  }
+
+  if (min_addr.first > pc_upc.first)
+    min_addr = pc_upc;
+  if (!disasm.count(pc_upc)) {
+    disasm[pc_upc] =  curStaticInst->disassemble(pc_upc.first,
+                                                 debugSymbolTable);
+  }
+}
+
+void InstProfiler::printProfile(void)
+{
+  if (!enable_profile)
+    return;
+
+  uint64_t total_num_inst = 0;
+  std::map<Addr, uint64_t> excProfPerSymbol;
+  const char *profile_file_name = getenv("PROFILE_GEM5");
+  assert(profile_file_name);
+  std::fstream fout(profile_file_name, std::fstream::out);
+  if (!fout.is_open()) {
+    std::cerr << "Cannot open " << profile_file_name << "\n";
+    return;
+  }
+  std::string disasmfile = std::string(profile_file_name) + ".disasm";
+  std::fstream disasmout(disasmfile.c_str(), std::fstream::out);
+  if (!disasmout.is_open()) {
+    std::cerr << "Cannot open " << disasmfile << "\n";
+    return;
+  }
+
+  std::map<PC_UPC_t, std::string>::iterator
+    cur_it = disasm.find(min_addr);
+
+  std::string sym_str = "";
+  Addr currentFnStart = 0, currentFnEnd = 0;
+  while (cur_it != disasm.end()) {
+    if (debugSymbolTable) {
+      if (cur_it->first.first < currentFnStart
+          || cur_it->first.first >= currentFnEnd) {
+
+        debugSymbolTable->findNearestSymbol(cur_it->first.first,
+                                            sym_str,
+                                            currentFnStart,
+                                            currentFnEnd);
+      }
+    }
+    if (branch_from_prof.count(cur_it->first)) {
+      fout << "\n\t\t# Branches from ";
+      for (std::map<PC_UPC_t, uint64_t>::iterator
+             I = branch_from_prof[cur_it->first].begin(),
+             E = branch_from_prof[cur_it->first].end();
+           I != E; ++I) {
+        fout << std::hex << I->first.first << "("
+             << std::dec <<  I->second << ") ";
+      }
+      fout << "\n";
+    }
+    disasmout << cur_it->first.first << " " << cur_it->first.second << " "
+              << sym_str << "+" << (cur_it->first.first - currentFnStart)
+              << cur_it->second << "\n";
+
+    fout << std::dec << std::setw(10) << exec_prof[cur_it->first]
+         << " : "
+         << std::hex
+         << std::setw(10)<< cur_it->first.first
+         << ","
+         << std::setw(2) << cur_it->first.second
+         << " : "
+         << std::setw(30) << sym_str
+         << "+"
+         << std::setw(5) << (cur_it->first.first - currentFnStart)
+         << "  "
+         << cur_it->second << "\n";
+    if (branch_to_prof.count(cur_it->first)) {
+      fout << "\t\t# Branches To ";
+      for (std::map<PC_UPC_t, uint64_t>::iterator
+             I = branch_to_prof[cur_it->first].begin(),
+             E = branch_to_prof[cur_it->first].end();
+           I != E; ++I) {
+        fout << I->first.first << "(" << I->second << ") ";
+      }
+      fout << "\n";
+    }
+
+    total_num_inst += exec_prof[cur_it->first];
+    excProfPerSymbol[currentFnStart] += exec_prof[cur_it->first];
+    cur_it = disasm.upper_bound(cur_it->first);
+  }
+
+  std::vector<std::pair<Addr, uint64_t> > sortedSymbolAddr;
+  for (std::map<Addr, uint64_t>::iterator I = excProfPerSymbol.begin(),
+         E = excProfPerSymbol.end(); I != E; ++I) {
+    std::vector<std::pair<Addr, uint64_t> >::iterator insertAt = sortedSymbolAddr.begin();
+    while (insertAt != sortedSymbolAddr.end()
+           && insertAt->second < I->second ) {
+      ++insertAt;
+    }
+    sortedSymbolAddr.insert(insertAt, *I);
+  }
+
+  fout << "Function Profile::\n";
+  fout << "Total...: " << std::dec << total_num_inst << "\n";
+
+  for (std::vector<std::pair<Addr,uint64_t> >::reverse_iterator
+         I = sortedSymbolAddr.rbegin(),
+         E = sortedSymbolAddr.rend(); I != E; ++I) {
+    std::string sym = "";
+    double perc = 100.0 * (double)I->second/(double)total_num_inst;
+    debugSymbolTable->findSymbol(I->first, sym);
+    fout << std::setprecision(2) << std::setw(5) << perc
+         << " "
+         << std::dec << std::setw(10) << I->second
+         << "::"
+         << std::hex << std::setw(10) << I->first
+         << "  "
+         << sym << "\n";
+    if (perc < 1.0)
+      break;
+  }
+
+  fout.close();
+  disasmout.close();
+}
+

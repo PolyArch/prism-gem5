@@ -2,6 +2,7 @@
 #ifndef __CRITPATH_NODE_HH
 #define __CRITPATH_NODE_HH
 
+#include <assert.h>
 #include <iostream>
 
 
@@ -135,7 +136,7 @@ public:
 
   uint32_t _seq;
 
-  #ifdef STANDALONE_CRITPATH
+#ifdef STANDALONE_CRITPATH
   void write_to_stream(std::ostream& out) {
     out << _fc << "[" << _icache_lat  << "],"
         <<_dc << "," << _ec << "," << _cc << "," << _cmpc
@@ -150,13 +151,13 @@ public:
         << ((_isload)?"L":"") << ((_isstore)?"S":"")
         << ((_isctrl)?"C":"") << ((_iscall)?"F":"") << ((_isreturn)?"R":"")
         << ", [" << _pc << ":" << _upc << "],"
-        << ", [" << _eff_addr << ":" << _acc_size << "],"
+        << ", [" << _eff_addr << ":" << (int)_acc_size << "],"
         << _opclass << "{" << _kernel_start << "," << _kernel_stop << "} "
-        << " reg{" << _regfile_read << "," << _regfile_write << "}"
-        << " freg{" << _regfile_fread << "," << _regfile_fwrite << "}"
-        << " rob{" << _rob_read << "," << _rob_write << "}"
-        << " iw{" <<  _iw_read << "," << _iw_write << "}"
-        << " ren{" << _rename_read << "," << _rename_write << "}\n";
+        << " reg{" << (int)_regfile_read << "," << (int)_regfile_write << "}"
+        << " freg{" << (int)_regfile_fread << "," << (int)_regfile_fwrite << "}"
+        << " rob{" << (int)_rob_read << "," << (int)_rob_write << "}"
+        << " iw{" <<  (int)_iw_read << "," << (int)_iw_write << "}"
+        << " ren{" << (int)_rename_read << "," << (int)_rename_write << "}\n";
       //<< "\n";
   }
 

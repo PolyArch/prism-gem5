@@ -41,13 +41,13 @@ def macroop DIVSS_XMM_XMM {
 };
 
 def macroop DIVSS_XMM_M {
-    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp1, seg, sib, disp, dataSize=4
     mdivf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop DIVSS_XMM_P {
     rdip t7
-    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp1, seg, riprel, disp, dataSize=4
     mdivf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
