@@ -1191,6 +1191,7 @@ LSQUnit<Impl>::recvRetry()
             dynamic_cast<LSQSenderState *>(retryPkt->senderState);
 
         if (dcachePort->sendTimingReq(retryPkt)) {
+            cpu->getCPG()->retryWB();
             // Don't finish the store unless this is the last packet.
             if (!TheISA::HasUnalignedMemAcc || !state->pktToSend ||
                     state->pendingPacket == retryPkt) {

@@ -3,7 +3,7 @@
 #define __CRITPATH_NODE_HH
 
 #include <iostream>
-
+#include <assert.h>
 
 struct CP_NodeDiskImage {
 public:

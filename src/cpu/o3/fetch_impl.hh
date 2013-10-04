@@ -371,6 +371,10 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
+    //for CPG
+    icache_latency = cpu->curCycle() - icache_access_cycle;
+
+
     memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
     cacheDataValid[tid] = true;
 
@@ -554,6 +558,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     Fault fault = NoFault;
 
     assert(!cpu->switchedOut());
+
+    icache_access_cycle = cpu->curCycle();
+
 
     // @todo: not sure if these should block translation.
     //AlphaDep
@@ -1175,7 +1182,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
 
-            icache_access_cycle = cpu->curCycle();
+            //icache_access_cycle = cpu->curCycle();
 
             if (fetchStatus[tid] == IcacheWaitResponse)
                 ++icacheStallCycles;
@@ -1310,12 +1317,14 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DynInstPtr instruction =
                 buildInst(tid, staticInst, curMacroop,
                           thisPC, nextPC, true);
-            if (icache_access_cycle !=0 ) {
+            //if (icache_access_cycle !=0 ) {
               //icache_latency= icache_access_cycle - instruction->seqNum;
-              icache_latency= cpu->curCycle() - icache_access_cycle;
+              //icache_latency= cpu->curCycle() - icache_access_cycle;
+            if(icache_latency != 0) {
               DPRINTF(Fetch, "----- setting icache latency %lld\n, sn:%i", icache_latency, instruction->seqNum);
               cpu->getCPG()->icache_latency(instruction->seqNum, icache_latency);
               icache_access_cycle = 0;
+              icache_latency = 0;
             }
 
 
@@ -1602,7 +1611,7 @@ DefaultFetch<Impl>::pipelineIcacheAccesses(ThreadID tid)
                 "starting at PC %s.\n", tid, thisPC);
 
         fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
-        icache_access_cycle = cpu->curCycle();
+        //icache_access_cycle = cpu->curCycle();
     }
 }
 

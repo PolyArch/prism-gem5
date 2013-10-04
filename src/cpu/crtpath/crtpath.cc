@@ -167,10 +167,25 @@ void CP_Graph::committed(uint64_t seq)
     }
   }
 }
+
+uint64_t lastWB=0;
+
+void CP_Graph::retryWB() {
+  assert(lastWB!=0);
+
+  DPRINTF(CP, "Retry -- StartWB: %lli [cycle: %lli]\n", lastWB, _cpu->curCycle());
+  getNode(lastWB)->startWB(_cpu->curCycle());
+  //lastWB=0; this might make it crash...
+}
+
 void CP_Graph::startWB(uint64_t seq)
 {
   if (DISABLE_CP)
     return;
+
+  //Writeback might get updated with a retry if the cache is blocked.
+  //lets remember the "cycle" that 
+  lastWB=seq;
 
   DPRINTF(CP, "StartWB: %lli [cycle: %lli]\n", seq, _cpu->curCycle());
   getNode(seq)->startWB(_cpu->curCycle());

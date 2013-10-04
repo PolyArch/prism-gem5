@@ -288,6 +288,7 @@ public:
 
   void startWB(uint64_t seq);
   void doneWB(uint64_t seq);
+  void retryWB();
 
   void squash(uint64_t seq);
 

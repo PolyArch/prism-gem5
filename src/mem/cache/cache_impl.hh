@@ -409,6 +409,10 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
+    DPRINTF(Cache, "%s -- mshrQueue %d, writeBuffer %d \n", __func__, 
+            mshrQueue.allocated, writeBuffer.allocated);
+
+
 
     /// @todo temporary hack to deal with memory corruption issue until
     /// 4-phase transactions are complete
@@ -552,6 +556,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 // mshrQueue.moveToFront(mshr);
             }
         } else {
+        DPRINTF(Cache, "%s -- (need mshr) mshrQueue %d, writeBuffer %d\n", __func__, 
+            mshrQueue.allocated, writeBuffer.allocated);
+
             // no MSHR
             assert(pkt->req->masterId() < system->maxMasters());
             mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
@@ -580,9 +587,12 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                     assert(pkt->needsExclusive() && !blk->isWritable());
                     blk->status &= ~BlkReadable;
                 }
-
                 allocateMissBuffer(pkt, time, true);
             }
+
+        DPRINTF(Cache, "%s -- (got mshr) mshrQueue %d, writeBuffer %d\n", __func__, 
+            mshrQueue.allocated, writeBuffer.allocated);
+
 
             if (prefetcher) {
                 next_pf_time = prefetcher->notify(pkt, time);
@@ -599,6 +609,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         allocateWriteBuffer(wbPkt, time, true);
         writebacks.pop_front();
     }
+
 
     return true;
 }
@@ -1032,7 +1043,15 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         requestMemSideBus((RequestCause)mq->index, clockEdge() +
                           pkt->busLastWordDelay);
     } else {
+
+    DPRINTF(Cache, "%s -- (deallocate) mshrQueue %d, writeBuffer %d \n", __func__, 
+mshrQueue.allocated, writeBuffer.allocated);
+
         mq->deallocate(mshr);
+
+    DPRINTF(Cache, "%s -- (deallocated) mshrQueue %d, writeBuffer %d \n", __func__, 
+mshrQueue.allocated, writeBuffer.allocated);
+
         if (wasFull && !mq->isFull()) {
             clearBlocked((BlockedCause)mq->index);
         }
