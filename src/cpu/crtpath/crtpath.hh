@@ -40,7 +40,6 @@ public:
   CP_NodePtr prev_mem;
   CP_NodePtr next_mem;
 
-
   uint64_t seq;
   uint64_t index;
   uint64_t fetch_cycle;
@@ -61,6 +60,8 @@ public:
   bool call,ret;
   bool serialBefore, serialAfter, nonSpec, storeCond, prefetch;
   bool integer, floating, squashAfter,writeBar,memBar,syscall;
+
+  bool true_cache_prod;
 
   uint64_t pc;
   uint16_t micropc;
@@ -84,6 +85,26 @@ public:
   std::vector<CP_NodePtr> producers;
   CP_NodePtr mem_pred;
   CP_NodePtr cache_pred;
+
+  uint64_t memRequestTime() {
+    if(isload) {
+      return execute_cycle;
+    } else if(isstore) {
+      return startwb_cycle;
+    } else {
+      assert(0);
+    }
+  }
+
+  uint64_t memCompletionTime() {
+    if(isload) {
+      return complete_cycle;
+    } else if(isstore) {
+      return donewb_cycle;
+    } else {
+      assert(0);
+    }
+  }
 
   void fetch(uint64_t cycle) {
     fetch_cycle = cycle;
@@ -216,6 +237,7 @@ public:
                          nonSpec, storeCond, prefetch,
                          integer, floating, squashAfter, writeBar,
                          memBar, syscall,
+                         true_cache_prod,
                          pc, micropc, opclass,
                          eff_addr,eff_addr2-eff_addr+1,
                          kernelStart, kernelStop,

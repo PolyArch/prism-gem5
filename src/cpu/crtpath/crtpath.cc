@@ -184,7 +184,7 @@ void CP_Graph::startWB(uint64_t seq)
     return;
 
   //Writeback might get updated with a retry if the cache is blocked.
-  //lets remember the "cycle" that 
+  //lets remember the "cycle" that
   lastWB=seq;
 
   DPRINTF(CP, "StartWB: %lli [cycle: %lli]\n", seq, _cpu->curCycle());
@@ -300,7 +300,7 @@ void CP_Graph::setInstTy(uint64_t seq,
       }
 
       cur_mem_node = node->prev_mem;
-      // 64 bytes <- O3CPU default params for caches
+      // 64 bytes <- O3CPU default params for caches (TODO: set from config)
       node_eff_addr = node->eff_addr >> 6;
       node_eff_addr2 = node->eff_addr2 >> 6;
 
@@ -311,6 +311,13 @@ void CP_Graph::setInstTy(uint64_t seq,
         if (node_eff_addr2 >= cur_eff_addr
             && node_eff_addr <= cur_eff_addr2) {
           node->cache_pred = cur_mem_node;
+          //figure out this mem access brought in the memory for me
+          //right now, we are saying this is true if they overlap.
+          if ( node->memCompletionTime() > node->cache_pred->memRequestTime()
+            && node->memRequestTime() < node->cache_pred->memCompletionTime()) {
+            node->true_cache_prod=true;
+          }
+
           break;
         }
         cur_mem_node = cur_mem_node->prev_mem;
@@ -436,8 +443,9 @@ CP_Node::CP_Node(uint64_t s):
   execute_cycle(0), complete_cycle(0),
   committed_cycle(0), startwb_cycle(0), donewb_cycle(0),
   ctrl_mispredict(false), spec_mispredict(false),
-  squashed(false), isload(false), isstore(false), kernelStart(false),
-  kernelStop(false),
+  squashed(false), isload(false), isstore(false), 
+  true_cache_prod(false),
+  kernelStart(false), kernelStop(false),
   eff_addr(0), eff_addr2(0),
   regfile_read(0), regfile_write(0),
   regfile_fread(0), regfile_fwrite(0),

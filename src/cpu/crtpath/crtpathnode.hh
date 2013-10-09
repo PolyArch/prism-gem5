@@ -22,6 +22,7 @@ public:
                       _integer(false), _floating(false),
                       _squashAfter(false), _writeBar(false),
                       _memBar(false), _syscall(false),
+                      _true_cache_prod(false),
 
                       _kernel_start(false), _kernel_stop(false),
                       _numSrcRegs(0), _numFPDestRegs(0), _numIntDestRegs(0),
@@ -44,6 +45,7 @@ public:
                    bool nonSpec, bool storeCond, bool prefetch,
                    bool integer, bool floating, bool squashAfter,
                    bool writeBar, bool memBar, bool syscall,
+                   bool true_cache_prod,
                    uint64_t pc, uint16_t upc,
                    uint16_t opclass,
                    uint64_t eff_addr, uint8_t acc_size,
@@ -73,6 +75,7 @@ public:
     _integer(integer), _floating(floating),
     _squashAfter(squashAfter), _writeBar(writeBar),
     _memBar(memBar), _syscall(syscall),
+    _true_cache_prod(true_cache_prod),
     _kernel_start(kernelStart), _kernel_stop(kernelStop),
     _numSrcRegs(numSrcRegs), _numFPDestRegs(numFPDestRegs),
     _numIntDestRegs(numIntDestRegs),
@@ -123,6 +126,7 @@ public:
   bool _serialBefore:1, _serialAfter:1, _nonSpec:1;
   bool _storeCond:1, _prefetch:1, _integer:1, _floating:1;
   bool _squashAfter:1, _writeBar:1, _memBar:1, _syscall:1;
+  bool _true_cache_prod:1;
   bool _kernel_start:1;
   bool _kernel_stop:1;
 
