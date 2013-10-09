@@ -443,7 +443,7 @@ CP_Node::CP_Node(uint64_t s):
   execute_cycle(0), complete_cycle(0),
   committed_cycle(0), startwb_cycle(0), donewb_cycle(0),
   ctrl_mispredict(false), spec_mispredict(false),
-  squashed(false), isload(false), isstore(false), 
+  squashed(false), isload(false), isstore(false),
   true_cache_prod(false),
   kernelStart(false), kernelStop(false),
   eff_addr(0), eff_addr2(0),
