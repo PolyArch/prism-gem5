@@ -539,19 +539,20 @@ void CP_Graph::store_to_disk(bool all)
 
 
 CP_Graph::  CP_Graph(BaseCPU *cpu): _cpu(cpu), _head(0), _tail(0), _size(0) {
-    static bool first_one=true;
+    static bool first_one = true;
 
     _head = new CP_Node(0);
     _tail = new CP_Node(0);
     _head->next = _tail;
     _tail->prev = _head;
     getCPGs().push_back(this);
+
     if (DISABLE_CP)
       return;
 
     char tmp[32];
 
-    if(first_one) {
+    if (first_one) {
       sprintf(tmp, "cp_switch_%p.data.gz", cpu);
     } else {
       sprintf(tmp, "cp_base_%p.data.gz",cpu);

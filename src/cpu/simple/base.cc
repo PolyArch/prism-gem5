@@ -487,7 +487,9 @@ BaseSimpleCPU::postExecute()
     if (FullSystem)
         traceFunctions(instAddr);
 
-    _profiler.profileAddr(instAddr, pc.microPC(), curStaticInst);
+    InstProfiler::get()->profileAddr(instAddr,
+                                     pc.microPC(),
+                                     curStaticInst);
 
     if (traceData) {
         traceData->dump();

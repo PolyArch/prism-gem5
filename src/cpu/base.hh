@@ -92,7 +92,7 @@ class CPUProgressEvent : public Event
 };
 
 class InstProfiler {
-public:
+private:
   InstProfiler(): enable_profile(0),
                   profile_outfile(0)
   {
@@ -100,6 +100,10 @@ public:
   }
 
   void init();
+  static InstProfiler Instance;
+public:
+  static InstProfiler* get() { return &Instance; }
+
   void clear() {
     exec_prof.clear();
     branch_to_prof.clear();
@@ -118,6 +122,7 @@ public:
   typedef std::map<PC_UPC_t, uint64_t>  PcProfile_t;
   typedef std::map<PC_UPC_t, PcProfile_t> CtrlProfile_t;
   typedef std::map<PC_UPC_t, std::string> AsmMap_t;
+  typedef std::map<PC_UPC_t, int> TypeProfile_t;
 
 private:
   bool enable_profile;
@@ -134,6 +139,7 @@ private:
   CtrlProfile_t branch_to_prof;
   CtrlProfile_t branch_from_prof;
   AsmMap_t disasm;
+  TypeProfile_t type_prof;
 
 };
 
@@ -493,10 +499,8 @@ class BaseCPU : public MemObject
   private:
     static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
 
-  protected:
-  InstProfiler _profiler;
-
   public:
+
     void traceFunctions(Addr pc)
     {
 

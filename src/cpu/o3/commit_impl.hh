@@ -1285,6 +1285,10 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
       }
     }
 
+    InstProfiler::get()->profileAddr(head_inst->instAddr(),
+                                     head_inst->microPC(),
+                                     head_inst->staticInst);
+
     // Return true to indicate that we have committed an instruction.
     return true;
 }

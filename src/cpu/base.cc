@@ -617,6 +617,8 @@ BaseCPU::traceFunctionsInternal(Addr pc)
     }
 }
 
+InstProfiler InstProfiler::Instance;
+
 void
 InstProfiler::init()
 {
@@ -653,6 +655,8 @@ InstProfiler::profileAddr(Addr pc, MicroPC upc, StaticInstPtr curStaticInst)
   bool isControl = curStaticInst->isControl();
   bool isCall = curStaticInst->isCall();
   bool isReturn = curStaticInst->isReturn();
+  bool isLoad = curStaticInst->isLoad();
+  bool isStore = curStaticInst->isStore();
 
   if (isControl && !(isCall || isReturn)) {
     is_a_branch_target = true;
@@ -665,6 +669,12 @@ InstProfiler::profileAddr(Addr pc, MicroPC upc, StaticInstPtr curStaticInst)
     disasm[pc_upc] =  curStaticInst->disassemble(pc_upc.first,
                                                  debugSymbolTable);
   }
+  type_prof[pc_upc] = (
+                       (isControl << 0)
+                       | (isCall << 1)
+                       | (isReturn << 2)
+                       | (isLoad << 3)
+                       | (isStore << 4));
 }
 
 void InstProfiler::printProfile(void)
@@ -717,7 +727,13 @@ void InstProfiler::printProfile(void)
     }
     disasmout << cur_it->first.first << " " << cur_it->first.second << " "
               << sym_str << "+" << (cur_it->first.first - currentFnStart)
-              << cur_it->second << "\n";
+              << cur_it->second << " ";
+    int ty = type_prof[cur_it->first];
+    disasmout << ((ty & 0x1) ?"C": "_")
+              << ((ty & 0x2) ?"A": "_")
+              << ((ty & 0x4) ?"R": "_")
+              << ((ty & 0x8) ?"L": "_")
+              << ((ty & 0x10)?"S": "_") << "\n";
 
     fout << std::dec << std::setw(10) << exec_prof[cur_it->first]
          << " : "
