@@ -87,23 +87,21 @@ public:
   CP_NodePtr cache_pred;
 
   uint64_t memRequestTime() {
-    if(isload) {
+    if (isload)
       return execute_cycle;
-    } else if(isstore) {
+    if (isstore)
       return startwb_cycle;
-    } else {
-      assert(0);
-    }
+    abort();
+    return 0;
   }
 
   uint64_t memCompletionTime() {
-    if(isload) {
+    if (isload)
       return complete_cycle;
-    } else if(isstore) {
+    if(isstore)
       return donewb_cycle;
-    } else {
-      assert(0);
-    }
+    abort();
+    return 0;
   }
 
   void fetch(uint64_t cycle) {

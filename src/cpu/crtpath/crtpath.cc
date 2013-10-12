@@ -477,6 +477,7 @@ void CP_Graph::store_to_disk(bool all)
   }
   assert(numNodes <= _size);
   unsigned bef_size = _size;
+
   CP_NodePtr node = _head;
   uint64_t index = node->index;
   uint64_t prev_fetch = node->fetch_cycle;
@@ -526,6 +527,8 @@ void CP_Graph::store_to_disk(bool all)
     prev_fetch = node->fetch_cycle;
     removeNode(node->seq);
     assert(bef_size == i + 1 + _size);
+    // prevent compiler warning about unused variable for bef_size
+    (void)bef_size;
   }
   _head->index = index;
   _head->fetch_cycle = prev_fetch;
