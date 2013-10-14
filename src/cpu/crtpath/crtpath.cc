@@ -17,20 +17,29 @@ uint64_t CP_Node::_del_count = 0;
 
 
 
-void CP_Graph::trackCallstack(uint64_t addr, uint16_t upc, bool isCtrl, bool isCall,bool isRet) {
-  if(prevCall) {
+void CP_Graph::trackCallstack(uint64_t addr, uint16_t upc, bool isCtrl,
+                              bool isCall,bool isRet)
+{
+  if (DISABLE_CP)
+    return;
+
+  if (prevCall)
     callStackAddrs.push_back(addr);
-  } else if(prevRet) {
+  else if (prevRet)
     callStackAddrs.pop_back();
-  }
-  prevPC=addr;
-  prevUPC=upc;
-  prevCtrl=isCtrl;
-  prevCall=isCall;
-  prevRet=isRet;
+
+  prevPC = addr;
+  prevUPC = upc;
+  prevCtrl = isCtrl;
+  prevCall = isCall;
+  prevRet = isRet;
 }
 
-void CP_Graph::dumpCallstack() {
+void CP_Graph::dumpCallstack()
+{
+  if (DISABLE_CP)
+    return;
+
   std::ofstream stackout;
   stackout.open("callstack.out", std::ios::out);
   assert(stackout.is_open());
@@ -39,7 +48,7 @@ void CP_Graph::dumpCallstack() {
   stackout << prevCtrl << "\n";
   stackout << prevCall << "\n";
   stackout << prevRet << "\n";
-  for(int i = 0; i < callStackAddrs.size();++i) {
+  for (int i = 0; i < callStackAddrs.size();++i) {
     stackout << callStackAddrs[i] << "\n";
   }
 }
