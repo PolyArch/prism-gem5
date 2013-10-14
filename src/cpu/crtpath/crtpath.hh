@@ -271,6 +271,8 @@ class CP_Graph: public RefCounted {
   CP_NodePtr _prev_mem;
 
   uint64_t _size;
+  uint64_t _num_nodes_to_disk;
+  std::string _out_file_name;
   ogzstream out;
 
   static std::vector<CP_GraphPtr> *CPGs;
@@ -337,9 +339,14 @@ public:
 
   void store_to_disk(bool all);
 
+  uint64_t getNumNodesWrote() const { return _num_nodes_to_disk; }
+  void delete_file();
+
   CP_NodePtr queryNode(uint64_t);
   CP_NodePtr getNode(uint64_t, bool nocreate = true);
   void removeNode(uint64_t);
+
+  
 };
 
 #endif

@@ -441,7 +441,6 @@ void CP_Graph::removeNode(uint64_t seq)
   seqIT->second->remove();
   seq2Nodes.erase(seqIT);
   -- _size;
-
 }
 
 CP_Node::CP_Node(uint64_t s):
@@ -531,6 +530,7 @@ void CP_Graph::store_to_disk(bool all)
       CP_NodeDiskImage img = node->getImage(prev_fetch);
       img.write_to_stream(out);
       node->wrote_to_disk = true;
+      ++_num_nodes_to_disk;
     }
     index = node->index;
     prev_fetch = node->fetch_cycle;
@@ -550,7 +550,15 @@ void CP_Graph::store_to_disk(bool all)
 }
 
 
-CP_Graph::  CP_Graph(BaseCPU *cpu): _cpu(cpu), _head(0), _tail(0), _size(0) {
+void CP_Graph::delete_file()
+{
+  assert(!out.is_open());
+  assert(_out_file_name != "");
+  unlink(_out_file_name.c_str());
+}
+
+CP_Graph::CP_Graph(BaseCPU *cpu): _cpu(cpu), _head(0), _tail(0), _size(0),
+                                  _num_nodes_to_disk(0), _out_file_name("") {
     static bool first_one = true;
 
     _head = new CP_Node(0);
@@ -564,17 +572,28 @@ CP_Graph::  CP_Graph(BaseCPU *cpu): _cpu(cpu), _head(0), _tail(0), _size(0) {
 
     char tmp[32];
 
+    const char *fname = "cp_switch_0.data.gz";
+    const char *env_value = getenv("GEM5_CRITICAL_PATH");
     if (first_one) {
-      sprintf(tmp, "cp_switch_%p.data.gz", cpu);
+      if (strlen(env_value) != 1) {
+        // use this value
+        fname = env_value;
+      } else {
+        sprintf(tmp, "cp_switch_%p.data.gz", cpu);
+        fname = tmp;
+      }
     } else {
       sprintf(tmp, "cp_base_%p.data.gz",cpu);
+      fname = tmp;
     }
 
     if (CP_TEXT) {
-      out.open(tmp, std::ios::out);
+      out.open(fname, std::ios::out);
     }  else {
-      out.open(tmp, std::ios::out | std::ios::binary);
+      out.open(fname, std::ios::out | std::ios::binary);
     }
+    _out_file_name = std::string(fname);
+
     assert(out.is_open());
     first_one=false;
   }
@@ -604,6 +623,8 @@ static void store_all()
   for (unsigned i = 0; i < CP_Graph::getCPGs().size(); ++i) {
     CP_GraphPtr g = CP_Graph::getCPGs()[i];
     g->store_to_disk(true);
+    if (g->getNumNodesWrote() == 0)
+      g->delete_file();
   }
   std::cerr << "Num of Nodes newed......: " << CP_Node::_total_count << "\n";
   std::cerr << "Num of Nodes deleted....: " << CP_Node::_del_count << "\n";
