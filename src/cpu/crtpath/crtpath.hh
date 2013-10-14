@@ -346,7 +346,7 @@ public:
   CP_NodePtr getNode(uint64_t, bool nocreate = true);
   void removeNode(uint64_t);
 
-  
+
 };
 
 #endif
