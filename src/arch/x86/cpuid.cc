@@ -63,7 +63,7 @@ namespace X86ISA {
     };
 
     static const int vendorStringSize = 13;
-    static const char vendorString[vendorStringSize] = "M5 Simulator";
+    static const char vendorString[vendorStringSize] = "GenuineIntel";
     static const int nameStringSize = 48;
     static const char nameString[nameStringSize] = "Fake M5 x86_64 CPU";
 
@@ -150,8 +150,10 @@ namespace X86ISA {
                         stringToRegister(vendorString + 8));
                 break;
               case FamilyModelStepping:
-                result = CpuidResult(0x00020f51, 0x00000805,
-                                     0xe7dbfbff, 0x00000001);
+                //result = CpuidResult(0x00020f51, 0x00000805,
+                //                     0xe7dbfbff, 0x00000001);
+                result = CpuidResult(0x000306a9, 0x05100800,
+                                     0x7f9ae3bf,0xbfebfbff);
                 break;
               default:
                 warn("x86 cpuid: unimplemented function %u", funcNum);

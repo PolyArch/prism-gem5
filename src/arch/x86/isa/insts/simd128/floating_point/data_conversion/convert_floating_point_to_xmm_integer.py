@@ -121,4 +121,35 @@ def macroop CVTTPD2DQ_XMM_P {
     cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=2
     lfpimm xmmh, 0
 };
+
+def macroop ROUNDSS_XMM_XMM_I {
+  roundf xmmlm, xmml, srcSize=4, destSize=4, ext="IMMEDIATE + 128"
+};
+
+def macroop ROUNDSS_XMM_M_I {
+  ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+  roundf xmmlm, ufp1, srcSize=4, destSize=4, ext="IMMEDIATE + 128"
+};
+
+def macroop ROUNDSS_XMM_P_I {
+  rdip t7
+  ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+  roundf xmmlm, ufp1, srcSize=4, destSize=4, ext="IMMEDIATE + 128"
+};
+
+def macroop ROUNDSD_XMM_XMM_I {
+  roundf xmmlm, xmml, srcSize=8, destSize=8, ext="IMMEDIATE + 128"
+};
+
+def macroop ROUNDSD_XMM_M_I {
+  ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+  roundf xmmlm, ufp1, srcSize=8, destSize=8, ext="IMMEDIATE + 128"
+};
+
+def macroop ROUNDSD_XMM_P_I {
+  rdip t7
+  ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+  roundf xmmlm, ufp1, srcSize=8, destSize=8, ext="IMMEDIATE + 128"
+};
+
 '''

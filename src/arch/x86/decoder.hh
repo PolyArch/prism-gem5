@@ -52,8 +52,8 @@ class Decoder
   private:
     //These are defined and documented in decoder_tables.cc
     static const uint8_t Prefixes[256];
-    static const uint8_t UsesModRM[2][256];
-    static const uint8_t ImmediateType[2][256];
+    static const uint8_t UsesModRM[4][256];
+    static const uint8_t ImmediateType[4][256];
     static const uint8_t SizeTypeToSize[3][10];
 
   protected:

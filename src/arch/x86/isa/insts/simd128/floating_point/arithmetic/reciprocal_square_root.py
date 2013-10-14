@@ -37,5 +37,40 @@
 
 microcode = '''
 # RSQRTPS
+def macroop RSQRTSS_XMM_XMM {
+  mrsqrt xmml, xmmlm, size=4, ext=Scalar
+};
+
+def macroop RSQRTSS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=4
+    mrsqrt xmml, ufp1, size=4, ext=Scalar
+};
+
+def macroop RSQRTSS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=4
+    mrsqrt xmml, ufp1, size=4, ext=Scalar
+};
+
+def macroop RSQRTPS_XMM_XMM {
+    mrsqrt xmml, xmmlm, size=4, ext=0
+    mrsqrt xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop RSQRTPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mrsqrt xmml, ufp1, size=4, ext=0
+    mrsqrt xmmh, ufp2, size=4, ext=0
+};
+
+def macroop RSQRTPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mrsqrt xmml, ufp1, size=4, ext=0
+    mrsqrt xmmh, ufp2, size=4, ext=0
+};
+
 # RSQRTPD
 '''

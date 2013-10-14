@@ -267,14 +267,16 @@ Decoder::doOpcodeState(uint8_t nextByte)
 
         //Figure out how big of an immediate we'll retreive based
         //on the opcode.
-        int immType = ImmediateType[emi.opcode.num - 1][nextByte];
+        unsigned opcTy = (emi.opcode.num - 1 + (emi.opcode.num == 3 &&
+                                                emi.opcode.prefixB == 0x3A));
+        int immType = ImmediateType[opcTy][nextByte];
         if (emi.opcode.num == 1 && nextByte >= 0xA0 && nextByte <= 0xA3)
             immediateSize = SizeTypeToSize[logAddrSize - 1][immType];
         else
             immediateSize = SizeTypeToSize[logOpSize - 1][immType];
 
         //Determine what to expect next
-        if (UsesModRM[emi.opcode.num - 1][nextByte]) {
+        if (UsesModRM[opcTy][nextByte]) {
             nextState = ModRMState;
         } else {
             if(immediateSize) {

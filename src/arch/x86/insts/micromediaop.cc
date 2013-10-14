@@ -41,6 +41,8 @@ namespace X86ISA
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
+        if (strcmp(mnemonic, "emms") == 0)
+          return response.str();
         printDestReg(response, 0, destSize);
         response << ", ";
         printSrcReg(response, 0, srcSize);

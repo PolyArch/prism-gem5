@@ -115,8 +115,8 @@
                 1: decode OPCODE_OP {
                     0x08: roundps_Vdq_Wdq_Ib();
                     0x09: roundpd_Vdq_Wdq_Ib();
-                    0x0A: roundss_Vss_Wss_Ib();
-                    0x0B: roundsd_Vsd_Wsd_Ib();
+                    0x0A: Inst::ROUNDSS(Vss,Wss,Ib);
+                    0x0B: Inst::ROUNDSD(Vsd,Wsd,Ib);
                     0x0C: blendps_Vdq_Wdq_Ib();
                     0x0D: blendpd_Vdq_Wdq_Ib();
                     0x0E: pblendw_Vdq_Wdq_Ib();
