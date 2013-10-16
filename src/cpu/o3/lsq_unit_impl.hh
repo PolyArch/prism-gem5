@@ -136,7 +136,7 @@ template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
-      loadBlockedHandled(false), storeInFlight(false), hasPendingPkt(false)
+      loadBlockedHandled(false), storeInFlight(false), hasPendingPkt(false), pendingPkt(NULL)
 {
 }
 
