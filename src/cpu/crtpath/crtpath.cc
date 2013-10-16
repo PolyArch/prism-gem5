@@ -553,6 +553,7 @@ void CP_Graph::store_to_disk(bool all)
 void CP_Graph::delete_file()
 {
   assert(!out.is_open());
+  assert(getNumNodesWrote() == 0);
   assert(_out_file_name != "");
   unlink(_out_file_name.c_str());
 }
