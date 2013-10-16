@@ -505,6 +505,26 @@ void CP_Graph::store_to_disk(bool all)
          break_after_this = true;
          node->committed_cycle = _cpu->curCycle();
        }
+       if(node->complete_cycle == 0) {
+         break_after_this = true;
+         node->complete_cycle = _cpu->curCycle();
+       }
+       if(node->execute_cycle == 0) {
+         break_after_this = true;
+         node->execute_cycle = _cpu->curCycle();
+       }
+       if(node->ready_cycle == 0) {
+         break_after_this = true;
+         node->ready_cycle = _cpu->curCycle();
+       }
+       if(node->dispatch_cycle == 0) {
+         break_after_this = true;
+         node->dispatch_cycle = _cpu->curCycle();
+       }
+       if(node->fetch_cycle == 0) {
+         break_after_this = true;
+         node->fetch_cycle = _cpu->curCycle();
+       }
        if (node->isstore && node->startwb_cycle == 0) {
          break_after_this = true;
          node->startwb_cycle = _cpu->curCycle();
