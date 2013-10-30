@@ -152,10 +152,10 @@ namespace X86ISA {
                 break;
               case FamilyModelStepping:
                 if (getenv("GEM5_X86_CPUID_HACK") == 0) {
-	           result = CpuidResult(0x00020f51, 0x00000805,
+                   result = CpuidResult(0x00020f51, 0x00000805,
                                      0xe7dbfbff, 0x00000001);
                 } else {
-	           result = CpuidResult(0x000306a9, 0x05100800,
+                   result = CpuidResult(0x000306a9, 0x05100800,
                                      0x7f9ae3bf,0xbfebfbff);
                 }
                 break;
