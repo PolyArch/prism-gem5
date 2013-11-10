@@ -198,7 +198,7 @@ def addCommonOptions(parser):
         help="""Treat value of --checkpoint-restore or --take-checkpoint as a
                 number of instructions.""")
     parser.add_option("--inst-width", default="4", help="instruction width")
-    parser.add_option("--wb-depth", default="16", help="Writeback depth -- buffer size for writeback....")
+    parser.add_option("--wb-depth", default="5", help="Writeback depth -- buffer size for writeback....")
     parser.add_option("--num-l1d-mshrs", default="4", help="number of L1D MSHRs")
 
 def addSEOptions(parser):
