@@ -87,6 +87,22 @@ def setCPUClass(options):
         TmpClass.LSQDepCheckShift = 0
         TmpClass.needsTSO      = False;
 
+        #int alu
+        TmpClass.fuPool.FUList[0].count\
+                  =int(min(max(1,int(inst_width)*3/4),6));
+
+        #int mul
+        TmpClass.fuPool.FUList[1].count\
+                  =int(min(max(1,int(inst_width)/2),2));
+
+        #fp alu
+        TmpClass.fuPool.FUList[2].count\
+                  =int(min(max(1,int(inst_width)/2),4));
+
+        #rw port
+        TmpClass.fuPool.FUList[7].count\
+                  =int(min(max(1,int(inst_width)/2),2));
+
 
     CPUClass = None
     if TmpClass.require_caches() and \
