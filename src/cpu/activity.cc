@@ -125,6 +125,7 @@ void
 ActivityRecorder::reset()
 {
     activityCount = 0;
+    DPRINTF(Activity, "Activity Reset: %i\n", activityCount);
     std::memset(stageActive, 0, numStages);
     for (int i = 0; i < longestLatency + 1; ++i)
         activityBuffer.advance();
