@@ -7,7 +7,7 @@
 
 struct CP_NodeDiskImage {
 public:
-  CP_NodeDiskImage(): 
+  CP_NodeDiskImage():
     _pc(0),
     _eff_addr(0),
     _seq(0),
@@ -35,7 +35,7 @@ public:
     _squashAfter(false), _writeBar(false),
     _memBar(false), _syscall(false),
     _true_cache_prod(false),
- 
+
     _kernel_start(false), _kernel_stop(false)  {}
 
 
