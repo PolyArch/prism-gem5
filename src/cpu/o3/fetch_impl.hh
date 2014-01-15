@@ -374,7 +374,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     //for CPG
     //if(icache_access_cycle!=(uint64_t(-1))) {
       icache_latency = cpu->curCycle() - icache_access_cycle;
-    //} 
+    //}
 
     memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
     cacheDataValid[tid] = true;
@@ -1328,7 +1328,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
               //icache_latency= cpu->curCycle() - icache_access_cycle;
             if(icache_latency != 0) {
               DPRINTF(Fetch, "----- setting icache latency %lld\n, sn:%i", icache_latency, instruction->seqNum);
-              cpu->getCPG()->icache_latency(instruction->seqNum, 
+              cpu->getCPG()->icache_latency(instruction->seqNum,
                   icache_latency + icache_holdover_latency);
               icache_access_cycle = 0;
               icache_latency = 0;
