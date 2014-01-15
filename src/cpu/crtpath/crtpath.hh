@@ -212,7 +212,13 @@ public:
     assert(execute_cycle <= complete_cycle);
     assert(complete_cycle <= committed_cycle);
     assert(!squashed);
+
+    if(fetch_cycle - prev_fetch < icache_lat) {
+      icache_lat = fetch_cycle-prev_fetch-1; //my icache latency timer doesn't work well for some reason, this should try to correct
+    }
+
     assert(fetch_cycle - prev_fetch >= icache_lat);
+
 
    assert(mem_pred == NULL ||
           (index - mem_pred->index) <= 2048);

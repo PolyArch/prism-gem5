@@ -74,7 +74,7 @@ using namespace std;
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
-      icache_latency(0), icache_access_cycle(0),
+      icache_latency(0), icache_access_cycle(0), icache_holdover_latency(0),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -372,8 +372,9 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     }
 
     //for CPG
-    icache_latency = cpu->curCycle() - icache_access_cycle;
-
+    //if(icache_access_cycle!=(uint64_t(-1))) {
+      icache_latency = cpu->curCycle() - icache_access_cycle;
+    //} 
 
     memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
     cacheDataValid[tid] = true;
@@ -558,8 +559,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     Fault fault = NoFault;
 
     assert(!cpu->switchedOut());
-
-    icache_access_cycle = cpu->curCycle();
+    //if(icache_access_cycle==0) {
+      icache_access_cycle = cpu->curCycle();
+    //}
 
 
     // @todo: not sure if these should block translation.
@@ -1249,12 +1251,15 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         if (needMem) {
             // If buffer is no longer valid or fetchAddr has moved to point
             // to the next cache block then start fetch from icache.
-            if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid])
+            if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid]) {
+                DPRINTF(Fetch, "[tid:%i]: cache data invalid, or fetchAddr moved to point to next cache block.\n", tid);
                 break;
+            }
 
             if (blkOffset >= numInsts) {
                 // We need to process more memory, but we've run out of the
                 // current block.
+                DPRINTF(Fetch, "[tid:%i]: We need to process more memory, but we've run out of the current block.\n", tid);
                 break;
             }
 
@@ -1297,6 +1302,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 } else {
                     // We need more bytes for this instruction so blkOffset and
                     // pcOffset will be updated
+                    DPRINTF(Fetch, "[tid:%i]: Decoder says inst is not ready, get more bytes!.\n", tid);
                     break;
                 }
             }
@@ -1322,9 +1328,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
               //icache_latency= cpu->curCycle() - icache_access_cycle;
             if(icache_latency != 0) {
               DPRINTF(Fetch, "----- setting icache latency %lld\n, sn:%i", icache_latency, instruction->seqNum);
-              cpu->getCPG()->icache_latency(instruction->seqNum, icache_latency);
+              cpu->getCPG()->icache_latency(instruction->seqNum, 
+                  icache_latency + icache_holdover_latency);
               icache_access_cycle = 0;
               icache_latency = 0;
+              icache_holdover_latency = 0;
             }
 
 
@@ -1401,6 +1409,15 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] != IcacheWaitRetry &&
         fetchStatus[tid] != QuiescePending &&
         !curMacroop;
+
+    if(issuePipelinedIfetch[tid]) {
+      //this must be the holdover case
+      if(icache_latency != 0) {
+        icache_holdover_latency=icache_latency;
+        icache_latency=0;
+        icache_access_cycle=0;
+      }
+    }
 }
 
 template<class Impl>
