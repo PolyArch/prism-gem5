@@ -351,6 +351,7 @@
                         0x7: decode OPCODE_DYSER_INST {
                              0x0B: NopInst::DStart(IsNonSpeculative, IsSimStart);
                              0x2C: NopInst::DStop(IsNonSpeculative, IsSimStop);
+                             0x31: SIGMOIDSS(Vo,Wo); // 49
                              default: UD2();
                              }
                         default: UD2();

@@ -1310,6 +1310,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     lastRunningCycle = curCycle();
     _status = Idle;
+    InstProfiler::get()->clear();
 }
 
 template <class Impl>
