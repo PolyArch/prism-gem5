@@ -190,7 +190,7 @@ let {{
                 # read the destination register.
                 simp_code = re.sub(r'(\b)DestReg(\b)(?!(\s*=))',"0",code);
                 simp_code = re.sub(r'(\b)FpDestReg_uqw(\b)(?!(\s*=))',"0",simp_code);
-                mcls.buildCppClasses(cls, simp_name, simp_Name, simp_suffix, 
+                mcls.buildCppClasses(cls, simp_name, simp_Name, simp_suffix,
                                      simp_code, simp_op_class)
 
 
@@ -1397,7 +1397,7 @@ let {{
             }
             FpDestReg_uqw = result;
         '''
-        
+
 
     class Cvtf2f(MediaOp):
         def __init__(self, dest, src, \
