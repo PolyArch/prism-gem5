@@ -122,11 +122,16 @@ let {{
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
             if flag_code is not "" or cond_check is not "true":
+	        # MAFIA: we removed else code when the condition check is true...
                 self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code, op_class)
+                        code, "", "true", "", op_class)
                 suffix = "Flags" + suffix
 
             base = "X86ISA::FpOp"
+
+            print "<==== building FpOpMeta"
+            print code
+            print "====>"
 
             # Get everything ready for the substitution
             iop_tag = InstObjParams(name, Name + suffix + "TopTag", base,
@@ -165,10 +170,12 @@ let {{
             decoder_output += MicroFpOpConstructor.subst(iop)
             exec_output += MicroFpOpExecute.subst(iop)
 
+            print exec_output
 
         def __new__(mcls, Name, bases, dict):
             abstract = False
             name = Name.lower()
+            print "generated code %s"%name
             if "abstract" in dict:
                 abstract = dict['abstract']
                 del dict['abstract']
@@ -270,6 +277,9 @@ let {{
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                      ecfBit | ezfBit, src2)"
+
+    class Movfpvanilla(FpUnaryOp):
+        code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
 
     class Xorfp(FpBinaryOp):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;'

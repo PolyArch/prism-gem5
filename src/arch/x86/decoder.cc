@@ -529,6 +529,7 @@ Decoder::doDyInstState()
     case 22:
     case 23:
     case 24:
+    case 0x31:
       instDone = true;
       nextState = ResetState;
       break;

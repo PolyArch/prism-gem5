@@ -44,7 +44,8 @@ categories = ["addition",
               "division",
               "square_root",
               "reciprocal_square_root",
-              "reciprocal_estimation"]
+              "reciprocal_estimation",
+              "sigmoid"]
 
 microcode = '''
 # SSE instructions

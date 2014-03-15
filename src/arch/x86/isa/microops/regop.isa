@@ -451,8 +451,10 @@ let {{
             PredccFlagBits = newFlags & ccFlagMask;
 
             //If a logic microop wants to set these, it wants to set them to 0.
-            PredcfofBits = PredcfofBits & ~((CFBit | OFBit) & ext);
-            PredecfBit = PredecfBit & ~(ECFBit & ext);
+            //PredcfofBits = PredcfofBits & ~((CFBit | OFBit) & ext);  MAFIA -- wrong?
+            //PredecfBit = PredecfBit & ~(ECFBit & ext);
+            PredcfofBits = 0;
+            PredecfBit = 0;
         '''
 
     class FlagRegOp(RegOp):
@@ -713,8 +715,14 @@ let {{
         big_code = 'DestReg = Remainder & mask(dataSize * 8);'
 
     class Mov(CondRegOp):
-        code = 'DestReg = merge(SrcReg1, op2, dataSize)'
+        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
         else_code = 'DestReg = DestReg;'
+
+    class Movsimp(RegOp):
+        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
+        big_code = 'DestReg = op2 & mask(dataSize * 8);'
+        op_class='No_OpClass'
+
 
     # Shift instructions
 

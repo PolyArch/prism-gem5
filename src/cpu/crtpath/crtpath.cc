@@ -238,10 +238,10 @@ void CP_Graph::consumer(unsigned reg, uint64_t seq)
   if (DISABLE_CP)
     return;
 
-  uint64_t prod_seq = reg_to_producer[reg];
-  if (prod_seq) {
-    assert(prod_seq < seq);
-    data_dep(prod_seq, seq);
+  uint64_t regseq = reg_to_producer[reg];
+  if (regseq) {
+    assert(regseq < seq);
+    data_dep(regseq, seq);
   }
 }
 

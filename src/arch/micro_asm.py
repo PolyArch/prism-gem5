@@ -127,6 +127,14 @@ def handle_statement(parser, container, statement):
             raise Exception, "Unrecognized mnemonic: %s" % statement.mnemonic
         parser.symbols["__microopClassFromInsideTheAssembler"] = \
             parser.microops[statement.mnemonic]
+
+        #print "===================classfrominside================"
+        #print statement
+        #print statement.mnemonic
+        #print statement.params
+        #print parser.microops[statement.mnemonic]
+        #print "===================classfrominside================<done>"
+
         try:
             microop = eval('__microopClassFromInsideTheAssembler(%s)' %
                     statement.params, {}, parser.symbols)
@@ -157,6 +165,7 @@ def handle_statement(parser, container, statement):
             raise
     else:
         raise Exception, "Didn't recognize the type of statement", statement
+    #print "%s"%(container)
 
 ##########################################################################
 #

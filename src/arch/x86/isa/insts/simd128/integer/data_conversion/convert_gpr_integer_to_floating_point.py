@@ -37,7 +37,7 @@
 
 microcode = '''
 def macroop CVTSI2SS_XMM_R {
-    mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
+    mov2fpsimp ufp1, regm, destSize=dsz, srcSize=dsz
     cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=Scalar
 };
 
@@ -53,7 +53,7 @@ def macroop CVTSI2SS_XMM_P {
 };
 
 def macroop CVTSI2SD_XMM_R {
-    mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
+    mov2fpsimp ufp1, regm, destSize=dsz, srcSize=dsz
     cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=Scalar
 };
 
