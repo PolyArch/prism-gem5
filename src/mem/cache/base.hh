@@ -242,6 +242,8 @@ class BaseCache : public MemObject
      */
     virtual bool isDirty() const = 0;
 
+    virtual void notifySwitched() {}
+
     /** Block size of this cache */
     const unsigned blkSize;
 

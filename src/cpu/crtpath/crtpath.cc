@@ -180,6 +180,9 @@ void CP_Graph::committed(uint64_t seq)
 uint64_t lastWB=0;
 
 void CP_Graph::retryWB() {
+  if (DISABLE_CP)
+    return;
+
   assert(lastWB!=0);
 
   DPRINTF(CP, "Retry -- StartWB: %lli [cycle: %lli]\n", lastWB, _cpu->curCycle());

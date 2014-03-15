@@ -195,6 +195,10 @@ def memInvalidate(root):
     for obj in root.descendants():
         obj.memInvalidate()
 
+def notifySwitched(root):
+    for obj in root.descendants():
+        obj.notifySwitched()
+
 def resume(root):
     for obj in root.descendants(): obj.drainResume()
 
@@ -297,6 +301,9 @@ def switchCpus(system, cpuList, do_drain=True):
             memInvalidate(system)
 
         _changeMemoryMode(system, memory_mode)
+
+    print "Notifying Caches"
+    notifySwitched(system)
 
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)

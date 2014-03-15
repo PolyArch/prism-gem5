@@ -55,6 +55,9 @@
 #include "mem/request.hh"
 #include "sim/core.hh"          // for Tick
 
+//FLAG TONY ADDED FOR VISUALIZING CACHES
+//#define BIT_FREQ_HIST 1
+
 /**
  * Cache block status bit assignments
  */
@@ -94,6 +97,14 @@ class CacheBlk
     uint8_t *data;
     /** the number of bytes stored in this block. */
     int size;
+
+    #ifdef BIT_FREQ_HIST
+    uint8_t *data_old;
+    uint64_t *cycleOfBit;
+    uint64_t *cyclesOf1;
+    uint32_t *downTrans;
+    #endif
+
 
     /** block state: OR of CacheBlkStatusBit */
     typedef unsigned State;

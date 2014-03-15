@@ -54,6 +54,8 @@
 #include "mem/cache/base.hh"
 #include "sim/core.hh"
 
+
+
 using namespace std;
 
 LRU::LRU(const Params *p)
@@ -86,7 +88,19 @@ LRU::LRU(const Params *p)
     blks = new BlkType[numSets * assoc];
     // allocate data storage in one big chunk
     numBlocks = numSets * assoc;
-    dataBlks = new uint8_t[numBlocks * blkSize];
+    dataBlks = new uint8_t[numBlocks * blkSize]();
+
+    #ifdef BIT_FREQ_HIST
+    firstCycleAccessed=0;
+    lastCycleAccessed=0;
+
+    cycleOfBit = new uint64_t[numBlocks * blkSize * 8];
+    cyclesOf1 = new uint64_t[numBlocks * blkSize * 8];
+    downTrans = new uint32_t[numBlocks * blkSize * 8];
+    dataBlks_old = new uint8_t[numBlocks * blkSize]();
+    getLRUs().push_back(this);
+    #endif
+
 
     unsigned blkIndex = 0;       // index into blks array
     for (unsigned i = 0; i < numSets; ++i) {
@@ -99,6 +113,15 @@ LRU::LRU(const Params *p)
             // locate next cache block
             BlkType *blk = &blks[blkIndex];
             blk->data = &dataBlks[blkSize*blkIndex];
+
+            #ifdef BIT_FREQ_HIST
+            blk->data_old = &dataBlks_old[blkSize*blkIndex];
+            blk->cycleOfBit = &cycleOfBit[blkSize*blkIndex*8];
+            blk->cyclesOf1 = &cyclesOf1[blkSize*blkIndex*8];
+            blk->downTrans = &downTrans[blkSize*blkIndex*8];
+            #endif
+
+
             ++blkIndex;
 
             // invalidate new cache block
@@ -117,6 +140,172 @@ LRU::LRU(const Params *p)
         }
     }
 }
+
+
+void LRU::mayHaveUpdated(BlkType* blk, const char* msg, bool force_update)
+{
+#ifdef BIT_FREQ_HIST
+
+  if(blk==NULL) {
+    return;
+  }
+
+  if(firstCycleAccessed==0) {
+    firstCycleAccessed=curCycle();
+
+    //Get Last Cycles of 1
+    unsigned blkIndex = 0;       // index into blks array
+    for (unsigned i = 0; i < numSets; ++i) {
+      for (unsigned j = 0; j < assoc; ++j) {
+        BlkType *blk = &blks[blkIndex];
+        //mayHaveUpdated(blk,true);
+    
+        for(int byte = 0; byte < blk->size; ++byte ) {
+          for(int bit = 0; bit < 8; ++bit ) {
+            int bit_index = 8 * byte + bit;
+            blk->cycleOfBit[bit_index] = curCycle();
+            blk->downTrans[bit_index] = 0;
+            blk->cyclesOf1[bit_index] = 0;
+          }
+          blk->data_old[byte]=blk->data[byte];   
+        }
+        ++blkIndex;
+      }
+    }
+  }
+  lastCycleAccessed=curCycle();
+  //DPRINTF(Cache, "may have accessed set %d using %s\n", blk->set, msg);
+
+  //iterate through bits in the cache block, see if they'e been updated
+  //if so:  1. record in the appropriate histogram, the length 
+  //        2. udpate the cycle type of that bit
+  //Copy the data onto the olddata
+
+  //bool updated=false;
+
+  for(int byte = 0; byte < blk->size; ++byte ) {
+    uint8_t new_byte=blk->data[byte];
+    uint8_t old_byte=blk->data_old[byte];
+    if(new_byte==old_byte && !force_update) {
+      continue;
+    }
+
+    for(int bit = 0; bit < 8; ++bit ) {
+      uint8_t new_bit = getbit(new_byte,bit);
+      uint8_t old_bit = getbit(old_byte,bit);
+
+      if(new_bit!=old_bit || force_update) {
+        //DPRINTF(Cache, "BYTE %d, BIT %d  Got Updated!\n",byte,bit);
+        int bit_index = 8 * byte + bit;
+        uint64_t cycleDiff = curCycle() - blk->cycleOfBit[bit_index];
+        if(!force_update && new_bit == 0) {
+          blk->downTrans[bit_index] += 1;
+          blk->cyclesOf1[bit_index] += cycleDiff;
+        }
+        if(force_update && new_bit == 1) {
+          blk->cyclesOf1[bit_index] += cycleDiff;
+        }
+        assert(blk->cycleOfBit[bit_index] <= curCycle());
+        blk->cycleOfBit[bit_index] = curCycle();
+        //onesHisto[cycleDiff] +=1;
+      }
+    }
+    blk->data_old[byte]=new_byte;
+  }
+#endif
+
+} 
+#ifdef BIT_FREQ_HIST
+std::vector<LRUPtr> *LRU::LRUs = 0;
+uint8_t LRU::getbit(uint8_t data, int index) {
+  return ((data >> index) & 0x01);
+}
+
+void LRU::printInfo() {
+  std::map<uint64_t, uint32_t>::iterator i,e;
+  ofstream raw_file, pic_file;
+  raw_file.open((std::string(name())+std::string(".wear.csv").c_str()),
+                                  std::ofstream::out | std::ofstream::trunc);
+
+  pic_file.open((std::string(name())+std::string(".wear.ppm").c_str()),
+                                  std::ofstream::out | std::ofstream::trunc);
+
+  //Generate Grayscale PPM File Header
+  pic_file << "P2\n";
+  pic_file << blkSize*assoc*8 << " " << numSets << " \n";
+  pic_file <<  65535 << " \n";
+
+  uint64_t total_cycles = curCycle() - firstCycleAccessed;
+
+  //put some comments in the file
+  pic_file << "#assoc: " << assoc << "\n";
+  pic_file << "#numSets: " << numSets << "\n";
+  pic_file << "#blkSize: " << blkSize << " (bytes)\n";
+  pic_file << "#numBits: " << 8*numSets*assoc*blkSize << "\n\n";
+  pic_file << "#firstCycle: " << firstCycleAccessed << "\n";
+  pic_file << "#lastCycle: " << lastCycleAccessed << "\n";
+  pic_file << "#curCycle: " << curCycle() << "\n";
+  pic_file << "#total_cycles: " << total_cycles << "\n";
+
+  if(total_cycles==0) {
+    total_cycles=1;
+  }
+
+  //Get Last Cycles of 1
+  unsigned blkIndex = 0;       // index into blks array
+  for (unsigned i = 0; i < numSets; ++i) {
+    for (unsigned j = 0; j < assoc; ++j) {
+      BlkType *blk = &blks[blkIndex];
+      mayHaveUpdated(blk,"end",true);
+  
+      for(int byte = 0; byte < blk->size; ++byte ) {
+        for(int bit = 0; bit < 8; ++bit ) {
+          int bit_index = 8 * byte + bit;
+//          DPRINTF(Cache, "%d,%d,%d: %lld %d\n",blkIndex,byte,bit,
+//                                               cyclesOf1[bit_index],
+//                                               downTrans[bit_index]);
+
+          raw_file << blk->cyclesOf1[bit_index] << "," << blk->downTrans[bit_index] << " ";
+          pic_file << (65535*(blk->cyclesOf1[bit_index] - blk->downTrans[bit_index]/1000))/total_cycles << " ";
+        }
+      }
+      raw_file << "\n";
+      pic_file << "\n"; 
+      ++blkIndex;
+    }
+  }
+
+  raw_file.close();
+  pic_file.close();
+  //for(i = onesHisto.begin(), e = onesHisto.end(); i!=e; ++i) {
+  //  DPRINTF(Cache, "%d:%d\n",i->first, i->second);
+  //}
+  //DPRINTF(Cache, "Printing Info!\n");
+}
+
+static void print_lru_info()
+{
+  for (unsigned i = 0; i < LRU::getLRUs().size(); ++i) {
+    LRUPtr lru = LRU::getLRUs()[i];
+    lru->printInfo();
+    //if (g->getNumNodesWrote() == 0)
+    //  g->delete_file();
+  }
+  //std::cerr << "Num of Nodes newed......: " << CP_Node::_total_count << "\n";
+  //std::cerr << "Num of Nodes deleted....: " << CP_Node::_del_count << "\n";
+  //std::cerr << "Num of Nodes not deleted: " << CP_Node::_count << "\n";
+  //CP_Graph::deleteCPGs();
+}
+
+__attribute__((constructor))
+static void init()
+{
+  atexit(print_lru_info);
+}
+
+
+#endif
+
 
 LRU::~LRU()
 {
@@ -241,7 +430,7 @@ LRU::clearLocks()
 LRU *
 LRUParams::create()
 {
-    return new LRU(this);
+    return new LRU(this); 
 }
 std::string
 LRU::print() const {

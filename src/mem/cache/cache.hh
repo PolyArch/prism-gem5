@@ -302,6 +302,7 @@ class Cache : public BaseCache
 
     void memWriteback();
     void memInvalidate();
+    void notifySwitched();
     bool isDirty() const;
 
     /**
