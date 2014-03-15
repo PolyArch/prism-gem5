@@ -178,15 +178,34 @@ let {{
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "", code, op_class)
 
+
+                simp_name=name+"simp"
+                simp_Name=Name #don't change name?
+                simp_suffix="simp"
+                simp_op_class=op_class
+                if hasattr(cls,'simp_op_class'):
+                  simp_op_class=cls.simp_op_class
+
+                # Create a simplified version of the code which does not
+                # read the destination register.
+                simp_code = re.sub(r'(\b)DestReg(\b)(?!(\s*=))',"0",code);
+                simp_code = re.sub(r'(\b)FpDestReg_uqw(\b)(?!(\s*=))',"0",simp_code);
+                mcls.buildCppClasses(cls, simp_name, simp_Name, simp_suffix, 
+                                     simp_code, simp_op_class)
+
+
                 # Hook into the microassembler dict
                 global microopClasses
                 microopClasses[name] = cls
+                microopClasses[simp_name] = cls
 
                 # If op2 is used anywhere, make register and immediate versions
                 # of this code.
                 matcher = re.compile(r"op2(?P<typeQual>_[^\W_]+)?")
                 if matcher.search(code):
                     microopClasses[name + 'i'] = cls
+                    microopClasses[simp_name + 'i'] = cls
+
             return cls
 
 
@@ -221,6 +240,12 @@ let {{
             className = self.className
             if self.mnemonic == self.base_mnemonic + 'i':
                 className += "Imm"
+            if self.mnemonic == self.base_mnemonic + 'simp': #MAFIA oops
+                className += "simp"
+            if self.mnemonic == self.base_mnemonic + 'simpi':
+                className += "simpImm"
+
+
             allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(src1)s, %(op2)s, %(dest)s,
                     %(srcSize)s, %(destSize)s, %(ext)s)''' % {
@@ -253,6 +278,7 @@ let {{
                 DestReg = DestReg;
             }
         '''
+        simp_op_class='No_OpClass'
 
     class Mov2fp(MediaOp):
         def __init__(self, dest, src1, src2 = 0, \
@@ -274,6 +300,22 @@ let {{
                 FpDestReg_uqw = FpDestReg_uqw;
             }
         '''
+        simp_op_class='No_OpClass'
+
+#    #Mafia: this is now done automatically for all media ops
+#    class Mov2fpsimp(MediaOp):
+#        def __init__(self, dest, src1, src2 = 0, \
+#                size = None, destSize = None, srcSize = None, ext = None):
+#            super(Mov2fpsimp, self).__init__(dest, src1,\
+#                    src2, size, destSize, srcSize, ext)
+#        code = '''
+#            uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
+#            uint64_t imm8 = imm8;
+#            FpDestReg_uqw = insertBits((uint64_t)0, destSize * 8 - 1, 0, srcReg1);
+#        '''
+#        op_class='No_OpClass'
+
+
 
     class Movsign(MediaOp):
         def __init__(self, dest, src, \
@@ -1221,6 +1263,7 @@ let {{
         '''
 
     class Cvtf2i(MediaOp):
+        op_class = 'FloatCvtOp'
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Cvtf2i, self).__init__(dest, src,\
@@ -1293,6 +1336,7 @@ let {{
         '''
 
     class Cvti2f(MediaOp):
+        op_class = 'FloatCvtOp'
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Cvti2f, self).__init__(dest, src,\
@@ -1353,6 +1397,7 @@ let {{
             }
             FpDestReg_uqw = result;
         '''
+        
 
     class Cvtf2f(MediaOp):
         def __init__(self, dest, src, \

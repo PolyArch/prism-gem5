@@ -35,6 +35,11 @@
 #
 # Authors: Gabe Black
 
+#def macroop MOV_R_R {
+#    mov reg, reg, regm
+#};
+
+
 microcode = '''
 
 #
@@ -52,7 +57,7 @@ def macroop MOV_MI_R {
 };
 
 def macroop MOV_R_R {
-    mov reg, reg, regm
+    movsimp reg, reg, regm
 };
 
 def macroop MOV_M_R {

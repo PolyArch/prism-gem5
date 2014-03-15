@@ -2074,6 +2074,7 @@ StaticInstPtr
         # PLY requires that the input be in a single string so we have to
         # do this up front.
         isa_desc = self.read_and_flatten(isa_desc_file)
+        print isa_desc
 
         # Initialize filename stack with outer file.
         self.fileNameStack.push((isa_desc_file, 0))
@@ -2082,12 +2083,14 @@ StaticInstPtr
         (isa_name, namespace, global_code, namespace_code) = \
                    self.parse_string(isa_desc)
 
+
         # grab the last three path components of isa_desc_file to put in
         # the output
         filename = '/'.join(isa_desc_file.split('/')[-3:])
 
         # generate decoder.hh
         includes = '#include "base/bitfield.hh" // for bitfield support'
+        print global_code.header_output
         global_output = global_code.header_output
         namespace_output = namespace_code.header_output
         decode_function = ''
