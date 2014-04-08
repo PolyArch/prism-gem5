@@ -43,8 +43,8 @@ def macroop CDQE_R {
 def macroop CQO_R_R {
     # A shift might be slower than, for example, an explicit sign extension,
     # so it might be worthwhile to try to find an alternative.
-    #flip 2nd, 3rd operands
-    movsimp regm, reg, regm
+    #mov regm, regm, reg
+    movsimp regm, reg
     srai regm, regm, "env.dataSize * 8 - 1"
 };
 '''

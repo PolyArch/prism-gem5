@@ -57,8 +57,9 @@ def macroop MOV_MI_R {
 };
 
 #flip 2nd 3rd operands
+#movsimp reg, regm, reg
 def macroop MOV_R_R {
-    movsimp reg, regm, reg
+  movsimp reg, regm
 };
 
 def macroop MOV_M_R {
