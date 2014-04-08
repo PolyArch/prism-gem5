@@ -46,6 +46,13 @@ def macroop XCHG_R_R
     xor reg, reg, regm
     xor regm, regm, reg
     xor reg, reg, regm
+
+    #The code should be like this, but I don't want to test it:
+    #(this should save 3 ALU ops, and 3 reg reads)
+    #Not sure what possible benefit the above could have! ^
+    #movsimp t1, reg
+    #movsimp reg, regm
+    #movsimp regm, t1
 };
 
 def macroop XCHG_R_M

@@ -58,6 +58,18 @@
 #include "mem/packet.hh"
 #include "params/LRU.hh"
 
+#ifdef BIT_FREQ_HIST
+#include <map>
+#include <vector>
+#include <iostream>
+#include <fstream>
+
+#include "base/refcnt.hh"
+
+class LRU;
+typedef RefCountingPtr<LRU> LRUPtr;
+#endif
+
 class BaseCache;
 
 
@@ -65,7 +77,7 @@ class BaseCache;
  * A LRU cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
-class LRU : public BaseTags
+class LRU : public BaseTags, public RefCounted
 {
   public:
     /** Typedef the block type used in this tag store. */
@@ -99,7 +111,43 @@ class LRU : public BaseTags
     /** Mask out all bits that aren't part of the block offset. */
     unsigned blkMask;
 
+
+#ifdef BIT_FREQ_HIST
+    static std::vector<LRUPtr>* LRUs;
+#endif
+
 public:
+
+
+#ifdef BIT_FREQ_HIST
+    uint8_t getbit(uint8_t data, int index);
+
+    uint64_t* cycleOfBit;
+    uint64_t* cyclesOf1;
+    uint32_t* downTrans;
+    uint8_t *dataBlks_old;
+    uint64_t firstCycleAccessed,lastCycleAccessed;
+
+    //std::map<uint64_t, uint32_t> onesHisto;
+    //std::map<uint64_t, uint32_t> zeroesHisto;
+    void printInfo();
+    static std::vector<LRUPtr> &getLRUs() {
+      if (!LRUs) {
+        LRUs = new std::vector<LRUPtr>();
+      }
+      return *LRU::LRUs;
+    }
+#endif
+
+    void mayHaveUpdated(BlkType* blk, const char* msg, bool force_update=false); 
+
+    void resetStats() {
+      #ifdef BIT_FREQ_HIST
+      firstCycleAccessed=0; 
+      #endif
+    }
+
+
 
     /** Convenience typedef. */
      typedef LRUParams Params;

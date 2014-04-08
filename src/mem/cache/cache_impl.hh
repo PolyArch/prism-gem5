@@ -290,6 +290,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 {
     DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
     if (pkt->req->isUncacheable()) {
         uncacheableFlush(pkt);
         blk = NULL;
@@ -305,11 +306,11 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             pkt->getAddr(), blk ? "hit" : "miss", blk ? blk->print() : "");
 
     if (blk != NULL) {
-
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
             incHitCount(pkt);
             satisfyCpuSideRequest(pkt, blk);
+            tags->mayHaveUpdated(blk,"1");
             return true;
         }
     }
@@ -343,6 +344,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         assert(!pkt->needsResponse());
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
+        tags->mayHaveUpdated(blk,"2");
         return true;
     }
 
@@ -1074,6 +1076,8 @@ mshrQueue.allocated, writeBuffer.allocated);
     DPRINTF(Cache, "Leaving %s with %s for address %x\n", __func__,
             pkt->cmdString(), pkt->getAddr());
     delete pkt;
+
+    tags->mayHaveUpdated(blk,"3");
 }
 
 
@@ -1105,6 +1109,8 @@ template<class TagStore>
 void
 Cache<TagStore>::memWriteback()
 {
+    DPRINTF(Cache, "WRITEBACK CACHE\n");
+
     WrappedBlkVisitor visitor(*this, &Cache<TagStore>::writebackVisitor);
     tags->forEachBlk(visitor);
 }
@@ -1113,8 +1119,18 @@ template<class TagStore>
 void
 Cache<TagStore>::memInvalidate()
 {
+    DPRINTF(Cache, "INVALIDATE CACHE\n");
+
     WrappedBlkVisitor visitor(*this, &Cache<TagStore>::invalidateVisitor);
     tags->forEachBlk(visitor);
+}
+
+template<class TagStore>
+void
+Cache<TagStore>::notifySwitched()
+{
+    DPRINTF(Cache, "SWITCHED MODES\n");
+    tags->resetStats();
 }
 
 template<class TagStore>

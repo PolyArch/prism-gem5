@@ -319,6 +319,9 @@ public:
         }
     }
 
+    void mayHaveUpdated(BlkType* blk,const char*){}
+    void resetStats(){}
+
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__

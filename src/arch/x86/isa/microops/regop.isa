@@ -230,7 +230,7 @@ let {{
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, code, big_code, \
                 flag_code, cond_check, else_code, cond_control_flag_init,
-                op_class):
+                op_class,big_op_class):
 
             # Globals to stick the output in
             global header_output
@@ -259,7 +259,7 @@ let {{
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code),
                         matcher.sub(src2_name, cond_control_flag_init),
-                        op_class)
+                        op_class,big_op_class)
                 imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
@@ -268,14 +268,14 @@ let {{
                         matcher.sub(imm_name, cond_check),
                         matcher.sub(imm_name, else_code),
                         matcher.sub(imm_name, cond_control_flag_init),
-                        op_class)
+                        op_class,big_op_class)
                 return
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, big_code, "", "true", else_code, "", op_class)
+                        code, big_code, "", "true", else_code, "", op_class,big_op_class)
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to
@@ -327,7 +327,7 @@ let {{
                           "cond_check" : cond_check,
                           "else_code" : else_code,
                           "cond_control_flag_init" : cond_control_flag_init,
-                          "op_class" : op_class})]
+                          "op_class" : big_op_class})]
 
             # Generate the actual code (finally!)
             for iop in iops:
@@ -355,10 +355,14 @@ let {{
                 cond_control_flag_init = cls.cond_control_flag_init
                 op_class = cls.op_class
 
+                big_op_class=op_class
+                if hasattr(cls,'big_op_class'):
+                  big_op_class = cls.big_op_class
+
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "", code, big_code,
                         flag_code, cond_check, else_code,
-                        cond_control_flag_init, op_class)
+                        cond_control_flag_init, op_class, big_op_class)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -718,11 +722,17 @@ let {{
         code = 'DestReg = merge(SrcReg1, op2, dataSize);'
         else_code = 'DestReg = DestReg;'
 
-    class Movsimp(RegOp):
-        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
-        big_code = 'DestReg = op2 & mask(dataSize * 8);'
-        op_class='No_OpClass'
+#    class Movsimp(RegOp):
+#        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
+#        big_code = 'DestReg = op2 & mask(dataSize * 8);'
+#        op_class='No_OpClass'
 
+#   Operand order flipped to avoid bug
+#        code = 'DestReg = merge(op2, SrcReg1, dataSize);'
+    class Movsimp(RdRegOp):
+        code = 'DestReg = merge(DestReg, SrcReg1, dataSize);'
+        big_code = 'DestReg = SrcReg1 & mask(dataSize * 8);'
+        big_op_class='No_OpClass'
 
     # Shift instructions
 

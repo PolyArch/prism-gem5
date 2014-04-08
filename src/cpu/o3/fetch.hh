@@ -381,6 +381,8 @@ class DefaultFetch
 
   uint64_t icache_latency;
   uint64_t icache_access_cycle;
+  uint64_t icache_holdover_latency;
+
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

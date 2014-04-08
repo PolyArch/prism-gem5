@@ -225,6 +225,8 @@ class Drainable
      */
     virtual void memInvalidate() {};
 
+    virtual void notifySwitched() {};
+
     State getDrainState() const { return _drainState; }
 
   protected:
