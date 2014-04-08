@@ -718,11 +718,16 @@ let {{
         code = 'DestReg = merge(SrcReg1, op2, dataSize);'
         else_code = 'DestReg = DestReg;'
 
-    class Movsimp(RegOp):
-        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
-        big_code = 'DestReg = op2 & mask(dataSize * 8);'
-        op_class='No_OpClass'
+#    class Movsimp(RegOp):
+#        code = 'DestReg = merge(SrcReg1, op2, dataSize);'
+#        big_code = 'DestReg = op2 & mask(dataSize * 8);'
+#        op_class='No_OpClass'
 
+#   Operand order flipped to avoid bug
+    class Movsimp(RegOp):
+        code = 'DestReg = merge(op2, SrcReg1, dataSize);'
+        big_code = 'DestReg = SrcReg1 & mask(dataSize * 8);'
+        op_class='No_OpClass'
 
     # Shift instructions
 
