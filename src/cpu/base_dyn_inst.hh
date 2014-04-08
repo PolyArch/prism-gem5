@@ -740,7 +740,7 @@ class BaseDynInst : public RefCounted
         for (unsigned i = 0; i < staticInst->numSrcRegs(); ++i) {
           if (staticInst->srcRegIdx(i) < TheISA::Ctrl_Base_DepTag
               && _srcRegIdx[i] != TheISA::ZeroReg)
-            cpu->getCPG()->consumer(_srcRegIdx[i], seqNum);
+            cpu->getCPG()->consumer(_srcRegIdx[i], seqNum, i);
         }
         for (unsigned i = 0; i < staticInst->numDestRegs(); ++i) {
           if (staticInst->destRegIdx(i) < TheISA::Ctrl_Base_DepTag

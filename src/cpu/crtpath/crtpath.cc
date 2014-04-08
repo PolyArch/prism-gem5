@@ -166,13 +166,13 @@ void CP_Graph::committed(uint64_t seq)
   if (ptr->squashed)
     removeNode(seq);
   else {
-    for (std::map<uint64_t, bool>::iterator I = ptr->prod_seq.begin(),
+    for (std::map<uint64_t, unsigned>::iterator I = ptr->prod_seq.begin(),
            E = ptr->prod_seq.end(); I != E; ++I) {
       CP_NodePtr prod = queryNode(I->first);
       if (!prod)
         continue;
       assert(ptr->execute_cycle >= prod->complete_cycle);
-      ptr->data_dep(prod);
+      ptr->data_dep(prod,I->second);
     }
   }
 }
@@ -230,7 +230,7 @@ void CP_Graph::producer(unsigned reg, uint64_t seq)
   reg_to_producer[reg] = seq;
 }
 
-void CP_Graph::consumer(unsigned reg, uint64_t seq)
+void CP_Graph::consumer(unsigned reg, uint64_t seq, unsigned i)
 {
   if (DISABLE_CP)
     return;
@@ -238,7 +238,7 @@ void CP_Graph::consumer(unsigned reg, uint64_t seq)
   uint64_t regseq = reg_to_producer[reg];
   if (regseq) {
     assert(regseq < seq);
-    data_dep(regseq, seq);
+    data_dep(regseq, seq, i);
   }
 }
 
@@ -335,7 +335,7 @@ void CP_Graph::setInstTy(uint64_t seq,
   }
 }
 
-void CP_Graph::data_dep(uint64_t src_seq, uint64_t dest_seq)
+void CP_Graph::data_dep(uint64_t src_seq, uint64_t dest_seq, unsigned i)
 {
   if (DISABLE_CP)
     return;
@@ -343,7 +343,7 @@ void CP_Graph::data_dep(uint64_t src_seq, uint64_t dest_seq)
   DPRINTF(CP, "DataDep: %lli -> %lli [cycle: %lli]\n",
           src_seq, dest_seq, _cpu->curCycle());
   assert(src_seq < dest_seq);
-  getNode(dest_seq, true)->prod_seq[src_seq] = true;
+  getNode(dest_seq, true)->prod_seq[src_seq] = i;
 }
 
 void CP_Graph::ctrl_dep(uint64_t src_seq)

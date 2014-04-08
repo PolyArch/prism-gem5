@@ -81,8 +81,8 @@ def setCPUClass(options):
         TmpClass.squashWidth   = inst_width
 
         TmpClass.wbDepth        = options.wb_depth
-        TmpClass.backComSize    = TmpClass.wbDepth
-        TmpClass.forwardComSize = TmpClass.wbDepth
+        TmpClass.backComSize    = max(5,TmpClass.wbDepth)
+        TmpClass.forwardComSize = max(5,TmpClass.wbDepth)
 
         TmpClass.LSQDepCheckShift = 0
         TmpClass.needsTSO      = False;

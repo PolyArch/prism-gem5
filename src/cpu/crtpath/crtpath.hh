@@ -81,8 +81,8 @@ public:
 
   bool wrote_to_disk;
 
-  std::map<uint64_t, bool> prod_seq;
-  std::vector<CP_NodePtr> producers;
+  std::map<uint64_t, unsigned> prod_seq; //tony: map now tells which reg index
+  std::vector<std::pair<CP_NodePtr,unsigned>> producers;
   CP_NodePtr mem_pred;
   CP_NodePtr cache_pred;
 
@@ -143,8 +143,8 @@ public:
     donewb_cycle = cycle;
   }
 
-  void data_dep(CP_NodePtr prod) {
-    producers.push_back(prod);
+  void data_dep(CP_NodePtr prod, unsigned i) {
+    producers.push_back(std::make_pair(prod,i));
   }
   void ctrl_dep() {
     ctrl_mispredict = true;
@@ -248,10 +248,11 @@ public:
                          seq
                          );
     for (unsigned i = 0, e = producers.size(); i != e; ++i) {
-      CP_NodePtr prod = producers[i];
+      CP_NodePtr prod = producers[i].first;
+      unsigned prod_ind = producers[i].second;
       assert(this->index > prod->index);
       assert(this->execute_cycle >= prod->complete_cycle);
-      img.addProd(i, this->index - prod->index);
+      img.addProd(prod_ind, this->index - prod->index);
     }
     return img;
   }
@@ -315,7 +316,7 @@ public:
   void squash(uint64_t seq);
 
   void producer(unsigned reg, uint64_t seq);
-  void consumer(unsigned reg, uint64_t seq);
+  void consumer(unsigned reg, uint64_t seq, unsigned i);
   void setInstTy(uint64_t seq,
      uint64_t pc, uint16_t micropc, OpClass opclass,
      uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
@@ -325,7 +326,7 @@ public:
      bool prefetch, bool integer, bool floating, bool squashAfter,
      bool writeBar, bool memBar, bool syscall);
 
-  void data_dep(uint64_t src_seq, uint64_t dest_seq);
+  void data_dep(uint64_t src_seq, uint64_t dest_seq, unsigned i);
   void ctrl_dep(uint64_t src_seq);
   void spec_dep(uint64_t src_seq);
   void eff_addr(uint64_t seq, uint64_t addr, uint64_t addr2);
