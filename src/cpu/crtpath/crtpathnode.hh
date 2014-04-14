@@ -1,9 +1,10 @@
-
 #ifndef __CRITPATH_NODE_HH
 #define __CRITPATH_NODE_HH
 
 #include <iostream>
 #include <assert.h>
+
+#define MAX_SRC_REGS 8
 
 struct CP_NodeDiskImage {
 public:
@@ -96,11 +97,13 @@ public:
 //    _rename_read(rename_read), _rename_write(rename_write),
   {
     verify();
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < MAX_SRC_REGS; ++i) {
       _prod[i] = 0;
     }
   }
   void addProd(int i, uint16_t p) {
+    assert(i < MAX_SRC_REGS);
+    assert(i >= 0);
     _prod[i] = p;
   }
 
@@ -119,7 +122,7 @@ public:
   uint16_t _wc;  //fetch to writeback cycle
   uint16_t _xc;  //fetch to xompletly done cycle
 
-  uint16_t _prod[7]; //MaxInstSrcRegs for X86
+  uint16_t _prod[MAX_SRC_REGS]; //MaxInstSrcRegs for X86
   uint16_t _mem_prod; // memory prod
   uint16_t _cache_prod; // cache prod
 

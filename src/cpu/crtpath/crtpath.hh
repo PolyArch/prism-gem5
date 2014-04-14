@@ -1,4 +1,3 @@
-
 #ifndef CRITICAL_PATH_HH
 #define CRITICAL_PATH_HH
 
