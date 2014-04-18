@@ -4,7 +4,7 @@
 #include <iostream>
 #include <assert.h>
 
-#define MAX_SRC_REGS 8
+#define MAX_SRC_REGS 9
 
 struct CP_NodeDiskImage {
 public:
