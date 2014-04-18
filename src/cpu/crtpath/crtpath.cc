@@ -239,7 +239,7 @@ void CP_Graph::consumer(unsigned reg, uint64_t seq, unsigned i)
     return;
 
   assert(i>=0);
-  
+
   assert(i<MAX_SRC_REGS);
   uint64_t regseq = reg_to_producer[reg];
   if (regseq) {
