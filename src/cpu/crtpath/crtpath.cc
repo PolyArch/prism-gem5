@@ -360,7 +360,7 @@ void CP_Graph::setInstTy(uint64_t seq,
 
           break;
         }
-        
+
         cur_mem_node = cur_mem_node->prev_mem;
       }
     }
@@ -486,8 +486,8 @@ CP_Node::CP_Node(uint64_t s):
   squashed(false), isload(false), isstore(false),
   true_cache_prod(false),
   kernelStart(false), kernelStop(false),
-  hit_level(0), miss_level(0),
   eff_addr(0), eff_addr2(0),
+  hit_level(0), miss_level(0),
   regfile_read(0), regfile_write(0),
   regfile_fread(0), regfile_fwrite(0),
   rob_read(0), rob_write(0),
@@ -598,7 +598,7 @@ void CP_Graph::store_to_disk(bool all)
 #else
         CP_NodeDiskImage img = node->getImage(prev_fetch);
         img.write_to_stream(out);
-#endif      
+#endif
 //}
       node->wrote_to_disk = true;
       ++_num_nodes_to_disk;
