@@ -763,6 +763,8 @@ class BaseDynInst : public RefCounted
                                  this->isLoad(),
                                  this->isStore(),
                                  this->isControl(),
+                                 this->isCondCtrl(),
+                                 this->isIndirectCtrl(),
                                  this->isCall(),
                                  this->isReturn(),
                                  false, //this->isKernelStart(),

@@ -251,7 +251,12 @@ namespace X86ISA
         bool
         branching() const
         {
-            return this->npc() != this->pc() + size();
+        //return this->npc() != this->pc() + size();
+          return this->npc() != this->pc() + size() ||
+                                this->nupc() != this->upc() + 1;
+
+          // || inst->pcState().upc() + 1 != inst->pcState().nupc() ; //This is from Jae-eon's 12/09/2013 gem5 email
+
         }
 
         void

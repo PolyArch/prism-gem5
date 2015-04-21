@@ -8,14 +8,18 @@
 #include "crtpath.hh"
 
 #define DISABLE_CP (getenv("GEM5_CRITICAL_PATH") == NULL)
+
 #define CP_TEXT 0
+
+#if PROTOBUF
+using namespace DepTrace;
+#endif
 
 std::vector<CP_GraphPtr> *CP_Graph::CPGs = 0;
 uint64_t CP_Node::_count = 0;
 uint64_t CP_Node::_total_count = 0;
 uint64_t CP_Node::_del_count = 0;
-
-
+uint64_t CP_Node::_commit_count = 0;
 
 void CP_Graph::trackCallstack(uint64_t addr, uint16_t upc, bool isCtrl,
                               bool isCall,bool isRet)
@@ -214,6 +218,17 @@ void CP_Graph::doneWB(uint64_t seq)
   }
 }
 
+void CP_Graph::updateMemLevel(uint64_t seq, int hit_level, int miss_level)
+{
+  if (DISABLE_CP)
+    return;
+
+  DPRINTF(CP, "Update Mem Level: %lli [cycle: %lli]\n", seq, _cpu->curCycle());
+  if(getNode(seq)) {
+    getNode(seq)->updateMemLevel(hit_level,miss_level);
+  }
+}
+
 
 void CP_Graph::squash(uint64_t seq)
 {
@@ -248,10 +263,17 @@ void CP_Graph::consumer(unsigned reg, uint64_t seq, unsigned i)
   }
 }
 
+void CP_Graph::setInstFlags(uint64_t seq, uint64_t flags) {
+  if (DISABLE_CP)
+    return;
+  CP_NodePtr node = getNode(seq);
+  node->inst_flags=flags;
+}
+
 void CP_Graph::setInstTy(uint64_t seq,
      uint64_t pc, uint16_t micropc, OpClass opclass,
      uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
-     bool ld, bool st, bool ctrl, bool call, bool ret,
+     bool ld, bool st, bool ctrl, bool condctrl, bool indctrl, bool call, bool ret,
      bool kernelStart, bool kernelStop,
      bool serialBefore, bool serialAfter, bool nonSpec, bool storeCond,
      bool prefetch, bool integer, bool floating, bool squashAfter,
@@ -267,6 +289,8 @@ void CP_Graph::setInstTy(uint64_t seq,
   node->isload = ld;
   node->isstore = st;
   node->ctrl = ctrl;
+  node->condctrl = condctrl;
+  node->indctrl = indctrl;
   node->call = call;
   node->ret = ret;
   node->pc = pc;
@@ -326,6 +350,7 @@ void CP_Graph::setInstTy(uint64_t seq,
         if (node_eff_addr2 >= cur_eff_addr
             && node_eff_addr <= cur_eff_addr2) {
           node->cache_pred = cur_mem_node;
+          assert(node->cache_pred->isload || node->cache_pred->isstore);
           //figure out this mem access brought in the memory for me
           //right now, we are saying this is true if they overlap.
           if ( node->memCompletionTime() > node->cache_pred->memRequestTime()
@@ -335,6 +360,7 @@ void CP_Graph::setInstTy(uint64_t seq,
 
           break;
         }
+        
         cur_mem_node = cur_mem_node->prev_mem;
       }
     }
@@ -460,6 +486,7 @@ CP_Node::CP_Node(uint64_t s):
   squashed(false), isload(false), isstore(false),
   true_cache_prod(false),
   kernelStart(false), kernelStop(false),
+  hit_level(0), miss_level(0),
   eff_addr(0), eff_addr2(0),
   regfile_read(0), regfile_write(0),
   regfile_fread(0), regfile_fwrite(0),
@@ -495,6 +522,10 @@ void CP_Graph::store_to_disk(bool all)
   CP_NodePtr node = _head;
   uint64_t index = node->index;
   uint64_t prev_fetch = node->fetch_cycle;
+#if PROTOBUF
+  uint64_t prev_seq = node->seq;
+#endif
+
   bool break_after_this = false;
 
   for (unsigned i = 0; (i < numNodes) && !break_after_this; ++i) {
@@ -553,8 +584,22 @@ void CP_Graph::store_to_disk(bool all)
       node->index = index+1;
       DPRINTF(CP, "Getting img for %lli\n", node->seq);
       DPRINTF(CP, "SEQ:%lli -> CPIND:%lli\n", node->seq, node->index-1); //because ind starts at 1...
-      CP_NodeDiskImage img = node->getImage(prev_fetch);
-      img.write_to_stream(out);
+
+       //if(PROTOBUF) {
+#if PROTOBUF
+        static bool protobuffing=false;
+        if(protobuffing==false) {
+          protobuffing=true;
+          printf("PROTOBUFFING!\n");
+        }
+        DynOp dynop = node->getDynOp(prev_fetch,prev_seq);
+        TraceInterf::write_DynOp(dynop,out);
+//      } else {
+#else
+        CP_NodeDiskImage img = node->getImage(prev_fetch);
+        img.write_to_stream(out);
+#endif      
+//}
       node->wrote_to_disk = true;
       ++_num_nodes_to_disk;
     }
@@ -653,9 +698,10 @@ static void store_all()
     if (g->getNumNodesWrote() == 0)
       g->delete_file();
   }
-  std::cerr << "Num of Nodes newed......: " << CP_Node::_total_count << "\n";
-  std::cerr << "Num of Nodes deleted....: " << CP_Node::_del_count << "\n";
-  std::cerr << "Num of Nodes not deleted: " << CP_Node::_count << "\n";
+  std::cerr << "Num of Nodes newed......: " << CP_Node::_total_count  << "\n";
+  std::cerr << "Num of Nodes committed..: " << CP_Node::_commit_count << "\n";
+  std::cerr << "Num of Nodes deleted....: " << CP_Node::_del_count    << "\n";
+  std::cerr << "Num of Nodes not deleted: " << CP_Node::_count        << "\n";
   CP_Graph::deleteCPGs();
 }
 

@@ -468,7 +468,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
         toCommit->squashedSeqNum[tid] = inst->seqNum;
-        toCommit->branchTaken[tid] = inst->pcState().branching();
+        toCommit->branchTaken[tid] = inst->pcState().branching(); // || inst->pcState().upc() + 1 != inst->pcState().nupc() ; //This is from Jae-eon's 12/09/2013 gem5 email
 
         TheISA::PCState pc = inst->pcState();
         TheISA::advancePC(pc, inst->staticInst);

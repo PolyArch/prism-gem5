@@ -231,7 +231,10 @@ class Request
      *  default constructor.)
      */
     Request()
-    {}
+    {
+      hit_level=0;
+      miss_level=0;
+    }
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
@@ -241,11 +244,16 @@ class Request
     Request(Addr paddr, int size, Flags flags, MasterID mid)
     {
         setPhys(paddr, size, flags, mid);
+        hit_level=0;
+        miss_level=0;
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time)
     {
         setPhys(paddr, size, flags, mid, time);
+        hit_level=0;
+        miss_level=0;
+
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time, Addr pc)
@@ -253,6 +261,9 @@ class Request
         setPhys(paddr, size, flags, mid, time);
         privateFlags.set(VALID_PC);
         _pc = pc;
+        hit_level=0;
+        miss_level=0;
+
     }
 
     Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
@@ -260,6 +271,9 @@ class Request
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setThreadContext(cid, tid);
+        hit_level=0;
+        miss_level=0;
+
     }
 
     ~Request() {}
@@ -526,6 +540,10 @@ class Request
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
+
+    /* For statistics purposes with critcal path dependence graph (CPG) */
+    int hit_level;
+    int miss_level;
 };
 
 #endif // __MEM_REQUEST_HH__

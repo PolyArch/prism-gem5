@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
@@ -96,6 +95,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     DPRINTF(Activity, "Activity: Writeback event [sn:%lli].\n", inst->seqNum);
 
     cpu->getCPG()->doneWB(inst->seqNum);
+    cpu->getCPG()->updateMemLevel(inst->seqNum, pkt->req->hit_level, pkt->req->miss_level);
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
     // If this is a split access, wait until all packets are received.

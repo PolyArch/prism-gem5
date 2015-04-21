@@ -35,6 +35,7 @@ if env['TARGET_ISA'] == 'no':
 
 
 Source('crtpath.cc')
+#Source('node.pb.cc')
 
 
 DebugFlag('CP')

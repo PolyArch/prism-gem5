@@ -9,35 +9,37 @@
 struct CP_NodeDiskImage {
 public:
   CP_NodeDiskImage():
-    _pc(0),
+    _pc(0),                                     //
     _eff_addr(0),
     _seq(0),
     _fc(0),  _icache_lat(0), _dc(0), _rc(0),
     _ec(0), _cc(0), _cmpc(0),
     _wc(0), _xc(0),
     _mem_prod(0), _cache_prod(0),
-    _opclass(0),
+    _opclass(0),                                //
 
-    _numSrcRegs(0), _numFPDestRegs(0),
-    _numIntDestRegs(0),
-    _regfile_read(0), _regfile_write(0),
-    _regfile_fread(0), _regfile_fwrite(0),
+    _numSrcRegs(0), _numFPDestRegs(0),          //
+    _numIntDestRegs(0),                         //
+    _regfile_read(0), _regfile_write(0),        //
+    _regfile_fread(0), _regfile_fwrite(0),      //
 
-    _acc_size(0),
-    _upc(0),
+    _acc_size(0),                               //
+    _upc(0),                                    //
+    _hit_level(0),
+    _miss_level(0),
 
     _ctrl_miss(0),
     _spec_miss(0),
-    _isload(0), _isstore(0),
-    _isctrl(0), _iscall(0), _isreturn(0),
-    _serialBefore(false), _serialAfter(false),
-    _nonSpec(false), _storeCond(false), _prefetch(false),
-    _integer(false), _floating(false),
-    _squashAfter(false), _writeBar(false),
-    _memBar(false), _syscall(false),
+    _isload(0), _isstore(0),                    //
+    _isctrl(0), _iscondctrl(0), _isindctrl(0), _iscall(0), _isreturn(0),       //
+    _serialBefore(false), _serialAfter(false),  //
+    _nonSpec(false), _storeCond(false), _prefetch(false),  //
+    _integer(false), _floating(false),                     //
+    _squashAfter(false), _writeBar(false),                 //
+    _memBar(false), _syscall(false),                       //
     _true_cache_prod(false),
 
-    _kernel_start(false), _kernel_stop(false)  {}
+    _kernel_start(false), _kernel_stop(false)  {}          //
 
 
   CP_NodeDiskImage(uint16_t fc, uint16_t ic, uint16_t dc,
@@ -46,13 +48,13 @@ public:
                    bool ctrl_miss, bool spec_miss,
                    bool ld, bool st,
                    uint16_t mp, uint16_t cp,
-                   bool ctrl, bool call, bool ret,
+                   bool ctrl, bool condctrl, bool indctrl, bool call, bool ret,
                    bool serialBefore, bool serialAfter,
                    bool nonSpec, bool storeCond, bool prefetch,
                    bool integer, bool floating, bool squashAfter,
                    bool writeBar, bool memBar, bool syscall,
                    bool true_cache_prod,
-                   uint64_t pc, uint16_t upc,
+                   uint64_t pc, uint16_t upc, int hit_level, int miss_level,
                    uint16_t opclass,
                    uint64_t eff_addr, uint8_t acc_size,
                    bool kernelStart, bool kernelStop,
@@ -80,11 +82,14 @@ public:
 
     _acc_size(acc_size),
     _upc(upc),
+    _hit_level(hit_level),
+    _miss_level(miss_level),
 
     _ctrl_miss(ctrl_miss),
     _spec_miss(spec_miss),
     _isload(ld), _isstore(st),
-    _isctrl(ctrl), _iscall(call), _isreturn(ret),
+    _isctrl(ctrl), _iscondctrl(condctrl), _isindctrl(indctrl),
+    _iscall(call), _isreturn(ret),
     _serialBefore(serialBefore), _serialAfter(serialAfter),
     _nonSpec(nonSpec), _storeCond(storeCond), _prefetch(prefetch),
     _integer(integer), _floating(floating),
@@ -133,7 +138,9 @@ public:
   uint8_t _regfile_fread:4, _regfile_fwrite:4;
 
   uint8_t  _acc_size:4;
-  uint8_t _upc:4;
+  uint8_t  _upc:4;
+  uint8_t  _hit_level:4;
+  uint8_t  _miss_level:4;
 
 
   bool     _ctrl_miss:1;    //ctrl mispredict
@@ -141,6 +148,8 @@ public:
   bool     _isload:1;  // is a load inst
   bool     _isstore:1; // is a store inst
   bool     _isctrl:1;
+  bool     _iscondctrl:1;
+  bool     _isindctrl:1;
   bool     _iscall:1;
   bool     _isreturn:1;
   bool _serialBefore:1, _serialAfter:1, _nonSpec:1;

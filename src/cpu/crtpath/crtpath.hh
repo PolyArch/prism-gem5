@@ -6,14 +6,23 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <vector>
+#include <bitset>
 
 //#include "base/fast_alloc.hh"
 #include "base/refcnt.hh"
 #include "cpu/crtpath/crtpathnode.hh"
 #include "cpu/op_class.hh"
 #include "gzstream.hh"
+//#include "cpu/crtpath/node.pb.h"
 
+//#define PROTOBUF (getenv("PROTOBUF") != NULL)
+#define PROTOBUF 0
+
+#if PROTOBUF
+#include "cpu/crtpath/protonode.hh"
+#endif
 
 class BaseCPU;
 
@@ -34,6 +43,7 @@ public:
   static uint64_t _count;
   static uint64_t _total_count;
   static uint64_t _del_count;
+  static uint64_t _commit_count;
 
   CP_NodePtr next, prev;
   CP_NodePtr prev_mem;
@@ -55,7 +65,7 @@ public:
   bool spec_mispredict;
   bool squashed;
   bool isload, isstore;
-  bool ctrl;
+  bool ctrl,condctrl,indctrl;
   bool call,ret;
   bool serialBefore, serialAfter, nonSpec, storeCond, prefetch;
   bool integer, floating, squashAfter,writeBar,memBar,syscall;
@@ -68,6 +78,13 @@ public:
   bool kernelStart;
   bool kernelStop;
   uint64_t eff_addr, eff_addr2;
+
+  int hit_level, miss_level;
+  uint64_t inst_flags;
+
+  #if PROTOBUF
+  std::bitset<TraceInterf::NUM_PROTO_DYN_FLAGS> dyn_flags;
+  #endif
 
   uint8_t numSrcRegs,numFPDestRegs,numIntDestRegs;
 
@@ -84,6 +101,8 @@ public:
   std::vector<std::pair<CP_NodePtr,unsigned>> producers;
   CP_NodePtr mem_pred;
   CP_NodePtr cache_pred;
+
+  
 
   uint64_t memRequestTime() {
     if (isload)
@@ -140,6 +159,11 @@ public:
   void doneWB(uint64_t cycle) {
     assert(cycle >= startwb_cycle);
     donewb_cycle = cycle;
+  }
+
+  void updateMemLevel(int h_level,int m_level) {
+    hit_level = h_level;
+    miss_level = m_level;
   }
 
   void data_dep(CP_NodePtr prod, unsigned i) {
@@ -202,6 +226,42 @@ public:
     }
   }
 
+#if PROTOBUF
+  DepTrace::DynOp getDynOp(uint64_t prev_fetch, uint64_t prev_seq) {
+    DepTrace::DynOp dynop;
+    dynop.set_pc(pc);
+    dynop.set_upc(micropc);
+
+    dyn_flags[TraceInterf::PROTO_DYN_CTRL_MISS]=ctrl_mispredict;
+    dyn_flags[TraceInterf::PROTO_DYN_SPEC_MISS]=spec_mispredict;
+    dyn_flags[TraceInterf::PROTO_DYN_TRUE_CACHE_PROD]=true_cache_prod;
+
+    dynop.set_flags(dyn_flags.to_ulong());
+    dynop.set_seq(seq-prev_seq);
+
+    //memory stuff
+    if(eff_addr   != 0) {dynop.set_eff_addr(eff_addr);}
+    if(hit_level  != 0) {dynop.set_hit_level(hit_level);}
+    if(miss_level != 0) {dynop.set_miss_level(miss_level);}
+    if(mem_pred && mem_pred->index   != 0) {dynop.set_mem_prod(mem_pred->index);}
+    if(cache_pred && cache_pred->index != 0) {
+      assert(cache_pred->isload || cache_pred->isstore);
+      dynop.set_cache_prod(cache_pred->index);
+    }
+
+    if(isload) {
+      dynop.set_mem_lat(complete_cycle - execute_cycle);
+    } else if (isstore) {
+       dynop.set_mem_lat(donewb_cycle  - startwb_cycle);
+    }
+
+
+    //icache stuff
+    if(icache_lat != 0) {dynop.set_icache_lat(icache_lat);}
+    return dynop;
+  }
+#endif
+
   CP_NodeDiskImage getImage(uint64_t prev_fetch)
   {
     assert(prev_fetch <= fetch_cycle);
@@ -235,13 +295,13 @@ public:
                          spec_mispredict, isload, isstore,
                          (mem_pred)?(this->index - mem_pred->index): 0,
                          (cache_pred)?(this->index - cache_pred->index): 0,
-                         ctrl, call, ret,
+                         ctrl, condctrl, indctrl, call, ret,
                          serialBefore, serialAfter,
                          nonSpec, storeCond, prefetch,
                          integer, floating, squashAfter, writeBar,
                          memBar, syscall,
                          true_cache_prod,
-                         pc, micropc, opclass,
+                         pc, micropc, hit_level, miss_level, opclass,
                          eff_addr,eff_addr2-eff_addr+1,
                          kernelStart, kernelStop,
                          numSrcRegs,numFPDestRegs,numIntDestRegs,
@@ -316,16 +376,19 @@ public:
 
   void startWB(uint64_t seq);
   void doneWB(uint64_t seq);
+  void updateMemLevel(uint64_t seq, int h_level, int m_level);
   void retryWB();
 
   void squash(uint64_t seq);
 
   void producer(unsigned reg, uint64_t seq);
   void consumer(unsigned reg, uint64_t seq, unsigned i);
+  void setInstFlags(uint64_t seq,uint64_t flags);
+
   void setInstTy(uint64_t seq,
      uint64_t pc, uint16_t micropc, OpClass opclass,
      uint8_t numSrcRegs, uint8_t numFPDestRegs, uint8_t numIntDestRegs,
-     bool ld, bool st, bool ctrl, bool call, bool ret,
+     bool ld, bool st, bool ctrl, bool condctrl, bool indctrl, bool call, bool ret,
      bool kernelStart, bool kernelStop,
      bool serialBefore, bool serialAfter, bool nonSpec, bool storeCond,
      bool prefetch, bool integer, bool floating, bool squashAfter,

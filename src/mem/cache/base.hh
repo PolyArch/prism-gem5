@@ -570,6 +570,7 @@ class BaseCache : public MemObject
     {
         assert(pkt->req->masterId() < system->maxMasters());
         misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
+        pkt->req->miss_level = isTopLevel ? 1 : 2; //TODO: need something more if L3 exists
 
         if (missCount) {
             --missCount;
@@ -580,6 +581,7 @@ class BaseCache : public MemObject
     void incHitCount(PacketPtr pkt)
     {
         assert(pkt->req->masterId() < system->maxMasters());
+        pkt->req->hit_level = isTopLevel ? 1 : 2; //TODO: need something more if L3 exists
         hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
 
     }
