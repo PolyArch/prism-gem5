@@ -102,7 +102,7 @@ public:
   CP_NodePtr mem_pred;
   CP_NodePtr cache_pred;
 
-  
+
 
   uint64_t memRequestTime() {
     if (isload)
